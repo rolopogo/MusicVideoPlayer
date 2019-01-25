@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 
-namespace MusicVideoPlayer.Misc
+namespace MusicVideoPlayer.Util
 {
     class Base64Sprites
     {

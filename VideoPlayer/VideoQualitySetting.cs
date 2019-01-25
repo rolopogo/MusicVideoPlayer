@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
 
-namespace MusicVideoPlayer.Misc
+namespace MusicVideoPlayer.Util
 {
     public enum VideoQuality { Best, High, Medium, Low, Custom };
 

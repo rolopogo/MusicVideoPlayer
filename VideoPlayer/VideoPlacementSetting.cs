@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
 
-namespace MusicVideoPlayer.Misc
+namespace MusicVideoPlayer.Util
 {
     public enum VideoPlacement { Background, Left, Right, Bottom, Top, Custom };
 
@@ -17,7 +17,7 @@ namespace MusicVideoPlayer.Misc
             switch (placement)
             {
                 case VideoPlacement.Background:
-                    return new Vector3(0, 20, 40);
+                    return new Vector3(0, 20, 50);
                 case VideoPlacement.Left:
                     return new Vector3(-8, 2, 10);
                 case VideoPlacement.Right:
@@ -55,7 +55,7 @@ namespace MusicVideoPlayer.Misc
             switch (placement)
             {
                 case VideoPlacement.Background:
-                    return 40;
+                    return 30;
                 case VideoPlacement.Left:
                     return 5;
                 case VideoPlacement.Right:

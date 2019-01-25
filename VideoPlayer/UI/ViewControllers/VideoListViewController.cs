@@ -8,7 +8,8 @@ using TMPro;
 using UnityEngine;
 using CustomUI.BeatSaber;
 using CustomUI.Utilities;
-using MusicVideoPlayer.Misc;
+using MusicVideoPlayer.Util;
+using MusicVideoPlayer.YT;
 
 namespace MusicVideoPlayer.UI.ViewControllers
 {
@@ -19,13 +20,14 @@ namespace MusicVideoPlayer.UI.ViewControllers
         public event Action<int> didSelectRow;
 
         public event Action searchButtonPressed;
-        public event Action<Video> downloadButtonPressed;
+        public event Action<YTResult> downloadButtonPressed;
         public event Action backButtonPressed;
         
-        public List<Video> videoList = new List<Video>();
+        public List<YTResult> resultsList = new List<YTResult>();
 
         private Button _pageUpButton;
         private Button _pageDownButton;
+
         private Button _searchButton;
         private Button _downloadButton;
         private Button _backButton;
@@ -45,12 +47,12 @@ namespace MusicVideoPlayer.UI.ViewControllers
                 
                 RectTransform container = new GameObject("VideoListContainer", typeof(RectTransform)).transform as RectTransform;
                 container.SetParent(rectTransform, false);
-                container.sizeDelta = new Vector2(110f, 0f);
+                container.sizeDelta = new Vector2(105f, 0f);
                 
                 _pageUpButton = Instantiate(Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "PageUpButton")), rectTransform, false);
                 (_pageUpButton.transform as RectTransform).anchorMin = new Vector2(0.5f, 1f);
                 (_pageUpButton.transform as RectTransform).anchorMax = new Vector2(0.5f, 1f);
-                (_pageUpButton.transform as RectTransform).anchoredPosition = new Vector2(0f, -14f);
+                (_pageUpButton.transform as RectTransform).anchoredPosition = new Vector2(0f, -10f);
                 (_pageUpButton.transform as RectTransform).sizeDelta = new Vector2(40f, 10f);
                 _pageUpButton.interactable = true;
                 _pageUpButton.onClick.AddListener(delegate ()
@@ -61,27 +63,25 @@ namespace MusicVideoPlayer.UI.ViewControllers
                 _pageDownButton = Instantiate(Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "PageDownButton")), rectTransform, false);
                 (_pageDownButton.transform as RectTransform).anchorMin = new Vector2(0.5f, 0f);
                 (_pageDownButton.transform as RectTransform).anchorMax = new Vector2(0.5f, 0f);
-                (_pageDownButton.transform as RectTransform).anchoredPosition = new Vector2(0f, 11f);
+                (_pageDownButton.transform as RectTransform).anchoredPosition = new Vector2(0f, 10f);
                 (_pageDownButton.transform as RectTransform).sizeDelta = new Vector2(40f, 10f);
                 _pageDownButton.interactable = true;
                 _pageDownButton.onClick.AddListener(delegate ()
                 {
                     _videosTableView.PageScrollDown();
-
                 });
                 
-                _searchButton = BeatSaberUI.CreateUIButton(rectTransform, "QuitButton", new Vector2(15, 36.25f), new Vector2(30f, 6f), () =>
+                _searchButton = BeatSaberUI.CreateUIButton(rectTransform, "CreditsButton", new Vector2(60, -20), new Vector2(30, 8), () =>
                 {
                     searchButtonPressed?.Invoke();
                 }, "Refine");
-                _searchButton.SetButtonTextSize(3f);
 
-                _downloadButton = BeatSaberUI.CreateUIButton(rectTransform, "QuitButton", new Vector2(-15, 36.25f), new Vector2(30f, 6f), () =>
+                _downloadButton = BeatSaberUI.CreateUIButton(rectTransform, "CreditsButton", new Vector2(60, -30), new Vector2(30, 8), () =>
                 {
-                    downloadButtonPressed?.Invoke(videoList[_lastSelectedRow]);
+                    downloadButtonPressed?.Invoke(resultsList[_lastSelectedRow]);
                 }, "Download");
-                _downloadButton.SetButtonTextSize(3f);
-
+                _downloadButton.GetComponentInChildren<HorizontalLayoutGroup>().padding = new RectOffset(0, 0, 0, 0);
+                                
                 _loadingIndicator = BeatSaberUI.CreateLoadingSpinner(rectTransform);
                 (_loadingIndicator.transform as RectTransform).anchorMin = new Vector2(0.5f, 0.5f);
                 (_loadingIndicator.transform as RectTransform).anchorMax = new Vector2(0.5f, 0.5f);
@@ -103,8 +103,7 @@ namespace MusicVideoPlayer.UI.ViewControllers
                 (_videosTableView.transform as RectTransform).anchorMin = new Vector2(0f, 0.5f);
                 (_videosTableView.transform as RectTransform).anchorMax = new Vector2(1f, 0.5f);
                 (_videosTableView.transform as RectTransform).sizeDelta = new Vector2(0f, 60f);
-                (_videosTableView.transform as RectTransform).position = new Vector3(0f, 0f, 2.4f);
-                (_videosTableView.transform as RectTransform).anchoredPosition = new Vector3(0f, -3f);
+                (_videosTableView.transform as RectTransform).anchoredPosition = new Vector3(-10f, 0f);
                 
                 _videosTableView.dataSource = this;
                 _videosTableView.didSelectRowEvent += _songsTableView_DidSelectRowEvent;
@@ -113,6 +112,7 @@ namespace MusicVideoPlayer.UI.ViewControllers
             {
                 _videosTableView.ReloadData();
             }
+            _downloadButton.interactable = false;
         }
 
         internal void Refresh()
@@ -127,13 +127,12 @@ namespace MusicVideoPlayer.UI.ViewControllers
             _lastSelectedRow = -1;
         }
         
-
-        public void SetContent(List<Video> videos)
+        public void SetContent(List<YTResult> videos)
         {
-            if(videos == null && videoList != null)
-                videoList.Clear();
+            if(videos == null && resultsList != null)
+                resultsList.Clear();
             else
-                videoList = new List<Video>(videos);
+                resultsList = new List<YTResult>(videos);
 
             if (_videosTableView != null)
             {
@@ -148,7 +147,6 @@ namespace MusicVideoPlayer.UI.ViewControllers
             if (_loadingIndicator != null)
             {
                 _loadingIndicator.SetActive(isLoading);
-                _downloadButton.interactable = !isLoading;
             }
         }
         
@@ -156,6 +154,7 @@ namespace MusicVideoPlayer.UI.ViewControllers
         {
             _lastSelectedRow = row;
             didSelectRow?.Invoke(row);
+            _downloadButton.interactable = true;
         }
 
         public float RowHeight()
@@ -166,7 +165,7 @@ namespace MusicVideoPlayer.UI.ViewControllers
         public int NumberOfRows()
         {
 
-            return videoList.Count;
+            return resultsList.Count;
         }
 
         public TableCell CellForRow(int row)
@@ -174,7 +173,6 @@ namespace MusicVideoPlayer.UI.ViewControllers
             LevelListTableCell _tableCell = Instantiate(_videoListTableCellInstance);
 
             // fix aspect ratio
-
             (_tableCell.transform.Find("CoverImage") as RectTransform).sizeDelta = new Vector2(160f/9f, 10);
             (_tableCell.transform.Find("CoverImage") as RectTransform).anchoredPosition += new Vector2(160f / 9f / 2f, 0f);
             (_tableCell.transform.Find("CoverImage") as RectTransform).GetComponent<UnityEngine.UI.Image>().preserveAspect = false;
@@ -183,9 +181,9 @@ namespace MusicVideoPlayer.UI.ViewControllers
             (_tableCell.transform.Find("Author") as RectTransform).anchoredPosition += new Vector2(160f / 9f, 0f);
 
             _tableCell.reuseIdentifier = "VideosTableCell";
-            _tableCell.songName = string.Format("{0}\n<size=80%>{1}</size>", videoList[row].title, videoList[row].author);
-            _tableCell.author = "[" + videoList[row].duration + "]" + videoList[row].description;
-            StartCoroutine(LoadScripts.LoadSprite(videoList[row].thumbnailURL, _tableCell));
+            _tableCell.songName = string.Format("{0}\n<size=80%>{1}</size>", resultsList[row].title, resultsList[row].author);
+            _tableCell.author = "[" + resultsList[row].duration + "]" + resultsList[row].description;
+            StartCoroutine(LoadScripts.LoadSprite(resultsList[row].thumbnailURL, _tableCell));
 
             return _tableCell;
         }

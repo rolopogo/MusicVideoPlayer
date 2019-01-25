@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
 
-namespace MusicVideoPlayer
+namespace MusicVideoPlayer.Util
 {
     static class ExtensionMethods
     {

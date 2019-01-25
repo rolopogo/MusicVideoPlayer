@@ -6,18 +6,18 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Web;
 
-namespace MusicVideoPlayer
+namespace MusicVideoPlayer.YT
 {
     public class YouTubeSearcher
     {
         const int MaxResults = 15;
-        public static List<Video> searchResults;
+        public static List<YTResult> searchResults;
         static bool searchInProgress = false;
 
         static IEnumerator SearchYoutubeCoroutine(string search, IBeatmapLevel level, Action callback)
         {
             searchInProgress = true;
-            searchResults = new List<Video>();
+            searchResults = new List<YTResult>();
 
             // get youtube results
             string url = "https://www.youtube.com/results?search_query=" + search;
@@ -38,14 +38,14 @@ namespace MusicVideoPlayer
             var videoNodes = doc.DocumentNode.SelectNodes("//*[contains(concat(' ', @class, ' '),'yt-lockup-video')]");
             if (videoNodes == null)
             {
-                Console.WriteLine(@"Search: No results found");
+                Console.WriteLine(@"Search: No results found matching: " + search);
             }
             else
             {
                 for (int i = 0; i < Math.Min(MaxResults, videoNodes.Count); i++)
                 {
                     var node = HtmlNode.CreateNode(videoNodes[i].InnerHtml);
-                    Video data = new Video();
+                    YTResult data = new YTResult();
                     
                     // title
                     var titleNode = node.SelectSingleNode("//*[contains(concat(' ', @class, ' '),'yt-uix-tile-link')]");
@@ -117,7 +117,7 @@ namespace MusicVideoPlayer
     }
 
 
-    public class Video
+    public class YTResult
     {
         public string title;
         public string author;
@@ -125,8 +125,6 @@ namespace MusicVideoPlayer
         public string duration;
         public string URL;
         public string thumbnailURL;
-        public IBeatmapLevel level;
-        public float downLoadProgress = 0f;
 
         public new string ToString()
         {
