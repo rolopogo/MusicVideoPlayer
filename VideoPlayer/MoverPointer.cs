@@ -7,8 +7,6 @@ namespace MusicVideoPlayer
 {
     public class MoverPointer : MonoBehaviour
     {
-
-
         protected const float MinScrollDistance = 0.25f;
         protected const float MaxScrollDistance = 49f;
         protected const float MaxScale = 100f;
@@ -37,11 +35,12 @@ namespace MusicVideoPlayer
             _realScale = moveable.localScale.x;
             _vrPointer = GetComponent<VRPointer>();
         }
+
         
         protected virtual void Update()
         {
             if (_vrPointer.vrController != null)
-                if (_vrPointer.vrController.triggerValue > 0.9f)
+                if (GetGrip())
                 {
                     if (_grabbingController != null) return;
                     RaycastHit hit;
@@ -95,6 +94,76 @@ namespace MusicVideoPlayer
                 _moveable.localScale = Vector3.Lerp(_moveable.localScale, _realScale * Vector3.one,
                     scaleSmooth * Time.unscaledDeltaTime);
             }
+        }
+
+        protected bool GetGrip()
+        {
+            if (Environment.CommandLine.Contains("fpfc"))
+            {
+                return Input.GetKey(KeyCode.G);
+            }
+            if (_vrPointer.vrController.name.Equals("ControllerLeft"))
+            {
+                return GetLeftGrip();
+            }
+            else if (_vrPointer.vrController.name.Equals("ControllerRight"))
+            {
+                return GetRightGrip();
+            }
+            return false;
+        }
+
+        public static bool GetRightGrip()
+        {
+            if (VRPlatformHelper.instance.vrPlatformSDK == VRPlatformHelper.VRPlatformSDK.OpenVR)
+            {
+                return OpenVRRightGrip();
+            }
+            else if (VRPlatformHelper.instance.vrPlatformSDK == VRPlatformHelper.VRPlatformSDK.Oculus)
+            {
+                return OculusRightGrip();
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        public static bool GetLeftGrip()
+        {
+            if (VRPlatformHelper.instance.vrPlatformSDK == VRPlatformHelper.VRPlatformSDK.OpenVR)
+            {
+                return OpenVRLeftGrip();
+            }
+            else if (VRPlatformHelper.instance.vrPlatformSDK == VRPlatformHelper.VRPlatformSDK.Oculus)
+            {
+                return OculusLeftGrip();
+            }
+            
+            else
+            {
+                return false;
+            }
+        }
+
+        private static bool OculusRightGrip()
+        {
+            return OVRInput.Get(OVRInput.Axis1D.PrimaryHandTrigger, OVRInput.Controller.RTouch) > 0.85f;
+        }
+
+        private static bool OculusLeftGrip()
+        {
+            return OVRInput.Get(OVRInput.Axis1D.PrimaryHandTrigger, OVRInput.Controller.LTouch) > 0.85f;
+        }
+
+        private static bool OpenVRRightGrip()
+        {
+            return SteamVR_Controller.Input(SteamVR_Controller.GetDeviceIndex(SteamVR_Controller.DeviceRelation.Rightmost)).GetPress(Valve.VR.EVRButtonId.k_EButton_Grip);
+        }
+
+        private static bool OpenVRLeftGrip()
+        {
+            return SteamVR_Controller.Input(SteamVR_Controller.GetDeviceIndex(SteamVR_Controller.DeviceRelation.Leftmost)).GetPress(Valve.VR.EVRButtonId.k_EButton_Grip);
         }
     }
 }

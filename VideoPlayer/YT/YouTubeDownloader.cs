@@ -21,28 +21,24 @@ namespace MusicVideoPlayer.YT
 
         Queue<VideoData> videoQueue;
         bool downloading;
+        bool updated;
 
         Process ydl;
 
-        private static YouTubeDownloader _instance = null;
-        public static YouTubeDownloader Instance
+        public static YouTubeDownloader Instance = null;
+        public static void OnLoad()
         {
-            get
+            if (!Instance)
             {
-                if (!_instance)
-                {
-                    _instance = new GameObject("YoutubeDownloader").AddComponent<YouTubeDownloader>();
-                    DontDestroyOnLoad(_instance);
-                    _instance.videoQueue = new Queue<VideoData>();
-                    _instance.quality = (VideoQuality)ModPrefs.GetInt(Plugin.PluginName, "VideoDownloadQuality", (int)VideoQuality.Medium, true);
-                    _instance.downloading = false;
-                }
-                return _instance;
+                Instance = new GameObject("YoutubeDownloader").AddComponent<YouTubeDownloader>();
+                DontDestroyOnLoad(Instance);
+                Instance.videoQueue = new Queue<VideoData>();
+                Instance.quality = (VideoQuality)ModPrefs.GetInt(Plugin.PluginName, "VideoDownloadQuality", (int)VideoQuality.Medium, true);
+                Instance.downloading = false;
+                Instance.updated = false;
+                Instance.UpdateYDL();
             }
-            private set
-            {
-                _instance = value;
-            }
+
         }
 
         public void EnqueueVideo(VideoData video)
@@ -51,23 +47,30 @@ namespace MusicVideoPlayer.YT
             if (!downloading)
             {
                 video.downloadState = DownloadState.Queued;
-                DownloadVideo();
+                downloadProgress?.Invoke(video);
+                StartCoroutine(DownloadVideo());
             }
         }
 
         public void DequeueVideo(VideoData video)
         {
             video.downloadState = DownloadState.Cancelled;
+            downloadProgress?.Invoke(video);
         }
-
-        private void DownloadVideo()
+        
+        private IEnumerator DownloadVideo()
         {
+            downloading = true;
+
+            if (!updated) yield return new WaitUntil(() => updated);
+
             VideoData video = videoQueue.Peek();
+            
             if (video.downloadState == DownloadState.Cancelled)
             {
                 // skip
                 videoQueue.Dequeue();
-
+                
                 if (videoQueue.Count > 0)
                 {
                     // Start next download
@@ -77,25 +80,29 @@ namespace MusicVideoPlayer.YT
                 {
                     // queue empty
                     downloading = false;
-                    return;
+                    yield break;
                 }
             }
+            Console.WriteLine("[MVP] Downloading: " + video.title);
 
-            downloading = true;
             video.downloadState = DownloadState.Downloading;
             downloadProgress?.Invoke(video);
             string levelPath = VideoLoader.GetLevelPath(video.level);
             if (!Directory.Exists(levelPath)) Directory.CreateDirectory(levelPath);
-            // Download the video via youtube-dl 
-            ydl = new Process();
-
+            
             string videoFileName = video.title;
             // Strip invalid characters
             foreach (var c in Path.GetInvalidFileNameChars())
             {
                 videoFileName = videoFileName.Replace(c, '-');
             }
+            videoFileName = videoFileName.Replace('\\', '-');
+            videoFileName = videoFileName.Replace('/', '-');
+
             video.videoPath = videoFileName + ".mp4";
+
+            // Download the video via youtube-dl 
+            ydl = new Process();
 
             ydl.StartInfo.FileName = Environment.CurrentDirectory + "/Youtube-dl/youtube-dl.exe";
             ydl.StartInfo.Arguments =
@@ -106,7 +113,6 @@ namespace MusicVideoPlayer.YT
                 " --no-playlist" +  // Don't download playlists, only the first video
                 " --no-part";  // Don't store download in parts, write directly to file
             
-
             ydl.StartInfo.RedirectStandardOutput = true;
             ydl.StartInfo.RedirectStandardError = true;
             ydl.StartInfo.UseShellExecute = false;
@@ -114,7 +120,7 @@ namespace MusicVideoPlayer.YT
             ydl.EnableRaisingEvents = true;
 
             ydl.Start();
-
+            
             // Hook up our output to console
             ydl.BeginOutputReadLine();
             ydl.BeginErrorReadLine();
@@ -125,20 +131,22 @@ namespace MusicVideoPlayer.YT
                     //[download]  81.8% of 40.55MiB at  4.80MiB/s ETA 00:01
                     //[download] Resuming download at byte 48809440
                     //
-                    Regex rx = new Regex(@"(\d+).\d%+");
+                    Regex rx = new Regex(@"(\d*).\d%+");
                     Match match = rx.Match(e.Data);
                     if (match.Success)
                     {
-                        video.downloadProgress = float.Parse(match.Value.Substring(0, match.Value.Length - 2)) / 100;
+                        video.downloadProgress = float.Parse(match.Value.Substring(0, match.Value.Length - 1)) / 100;
                         downloadProgress?.Invoke(video);
                     }
-                    Console.WriteLine(e.Data);
+                    Console.WriteLine("[MVP] " + e.Data);
                 }
             };
 
             ydl.ErrorDataReceived += (sender, e) => {
-                Console.WriteLine(e.Data);
-                //to do: check these errors problems - redownload or skip file when an error occurs
+                if (e.Data.Length < 3) return;
+                //to do: check these errors are problems - redownload or skip file when an error occurs
+                video.downloadState = DownloadState.Cancelled;
+                downloadProgress?.Invoke(video);
             };
 
             ydl.Exited += (sender, e) => {
@@ -167,6 +175,7 @@ namespace MusicVideoPlayer.YT
                     // queue empty
                     downloading = false;
                 }
+                ydl.Dispose();
             };
         }
 
@@ -190,7 +199,44 @@ namespace MusicVideoPlayer.YT
                 // video okay?
                 downloadProgress?.Invoke(video);
             }
-            
+        }
+
+        private void UpdateYDL()
+        {
+            ydl = new Process();
+            ydl.StartInfo.FileName = Environment.CurrentDirectory + "/Youtube-dl/youtube-dl.exe";
+            ydl.StartInfo.Arguments = "-U";
+            ydl.StartInfo.RedirectStandardOutput = true;
+            ydl.StartInfo.RedirectStandardError = true;
+            ydl.StartInfo.UseShellExecute = false;
+            ydl.StartInfo.CreateNoWindow = true;
+            ydl.EnableRaisingEvents = true;
+
+            ydl.Start();
+
+            ydl.BeginOutputReadLine();
+            ydl.BeginErrorReadLine();
+
+            ydl.OutputDataReceived += (sender, e) =>
+            {
+                if (e.Data != null)
+                {
+                    Console.WriteLine("[MVP] " + e.Data);
+                }
+            };
+
+            ydl.ErrorDataReceived += (sender, e) =>
+            {
+                Console.WriteLine("[MVP] " + e.Data);
+                //to do: check these errors problems - redownload or skip file when an error occurs
+            };
+
+            ydl.Exited += (sender, e) =>
+            {
+                updated = true;
+                Console.WriteLine("[MVP] Youtube-DL update complete");
+                ydl.Dispose();
+            };
         }
 
     }

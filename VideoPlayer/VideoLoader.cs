@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using SongLoaderPlugin;
 using UnityEngine;
 using System.IO;
-using SimpleJSON;
+using IllusionPlugin;
 using SongLoaderPlugin.OverrideClasses;
 using System.Diagnostics;
 using MusicVideoPlayer.YT;
@@ -19,6 +19,8 @@ namespace MusicVideoPlayer.Util
         public bool AreVideosLoaded { get; private set; }
         public bool AreVideosLoading { get; private set; }
 
+        public bool autoDownload = false;
+
         private Dictionary<IBeatmapLevel, VideoData> videos;
 
         private HMTask _loadingTask;
@@ -30,6 +32,7 @@ namespace MusicVideoPlayer.Util
         {
             if (Instance != null) return;
             new GameObject("VideoFetcher").AddComponent<VideoLoader>();
+            
         }
 
         private void Awake()
@@ -37,6 +40,7 @@ namespace MusicVideoPlayer.Util
             if (Instance != null) return;
             Instance = this;
 
+            autoDownload = ModPrefs.GetBool(Plugin.PluginName, "autoDownload", false, true);
             SongLoader.SongsLoadedEvent += RetrieveAllVideoData;
 
             DontDestroyOnLoad(gameObject);
@@ -74,15 +78,24 @@ namespace MusicVideoPlayer.Util
 
         public static string GetLevelPath(IBeatmapLevel level)
         {
-            if (level.levelID.Length < 32)
+            if (level is CustomLevel)
             {
-                // OST
-                return Path.Combine(Environment.CurrentDirectory, "CustomSongs", "_OST", level.songName);
+                // Custom song
+                return (level as CustomLevel).customSongInfo.path;
             }
             else
             {
-                // Custom song
-                return SongLoader.CustomLevels.Find(x => x.customSongInfo.GetIdentifier() == level.levelID)?.customSongInfo?.path;
+                // OST
+                var videoFileName = level.songName;
+                // strip invlid characters
+                foreach (var c in Path.GetInvalidFileNameChars())
+                {
+                    videoFileName = videoFileName.Replace(c, '-');
+                }
+                videoFileName = videoFileName.Replace('\\', '-');
+                videoFileName = videoFileName.Replace('/', '-');
+
+                return Path.Combine(Environment.CurrentDirectory, "CustomSongs", "_OST", videoFileName);
             }
         }
 
@@ -132,7 +145,17 @@ namespace MusicVideoPlayer.Util
                     foreach (var level in levels)
                     {
                         i++;
-                        var songPath = Path.Combine(Environment.CurrentDirectory, "CustomSongs", "_OST", level.songName);
+                        var videoFileName = level.songName;
+                        // strip invlid characters
+                        foreach (var c in Path.GetInvalidFileNameChars())
+                        {
+                            videoFileName = videoFileName.Replace(c, '-');
+                        }
+                        videoFileName = videoFileName.Replace('\\', '-');
+                        videoFileName = videoFileName.Replace('/', '-');
+                        
+                        var songPath = Path.Combine(Environment.CurrentDirectory, "CustomSongs", "_OST", videoFileName);
+                        
                         if (!Directory.Exists(songPath)) continue;
                         var results = Directory.GetFiles(songPath, "video.json", SearchOption.AllDirectories);
                         if (results.Length == 0)
@@ -157,7 +180,7 @@ namespace MusicVideoPlayer.Util
                         }
                         catch (Exception e)
                         {
-                            Console.WriteLine("Failed to load song folder: " + result);
+                            Console.WriteLine("[MVP] Failed to load song folder: " + result);
                             Console.WriteLine(e.ToString());
                         }
                     }
@@ -165,7 +188,7 @@ namespace MusicVideoPlayer.Util
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine("RetrieveOSTVideoData failed:");
+                    Console.WriteLine("[MVP] RetrieveOSTVideoData failed:");
                     Console.WriteLine(e.ToString());
                 }
             };
@@ -221,7 +244,7 @@ namespace MusicVideoPlayer.Util
                         }
                         catch (Exception e)
                         {
-                            Console.WriteLine("Failed to load song folder: " + result);
+                            Console.WriteLine("[MVP] Failed to load song folder: " + result);
                             Console.WriteLine(e.ToString());
                         }
                     }
@@ -229,7 +252,7 @@ namespace MusicVideoPlayer.Util
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine("RetrieveCustomLevelVideoData failed:");
+                    Console.WriteLine("[MVP] RetrieveCustomLevelVideoData failed:");
                     Console.WriteLine(e.ToString());
                 }
             };
@@ -263,7 +286,7 @@ namespace MusicVideoPlayer.Util
             }
             catch (Exception)
             {
-                Console.WriteLine("Error parsing video json: " + jsonPath);
+                Console.WriteLine("[MVP] Error parsing video json: " + jsonPath);
                 return null;
             }
 
@@ -271,8 +294,10 @@ namespace MusicVideoPlayer.Util
 
             if (!File.Exists(GetVideoPath(vid)))
             {
-                Console.WriteLine("Couldn't find Video: " + vid.videoPath + " queueing for download...");
-                YouTubeDownloader.Instance.EnqueueVideo(vid);
+                if (autoDownload) {
+                    Console.WriteLine("[MVP] Couldn't find Video: " + vid.title + " queueing for download...");
+                    YouTubeDownloader.Instance.EnqueueVideo(vid);
+                }
             }
             else
             {

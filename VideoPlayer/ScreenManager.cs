@@ -6,6 +6,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -20,7 +21,7 @@ namespace MusicVideoPlayer
         public static ScreenManager Instance;
 
         public static bool showVideo = false;
-        public static VideoPlacement placement;
+        public VideoPlacement placement;
 
         private VideoData currentVideo;
         private GameObject screen;
@@ -51,8 +52,8 @@ namespace MusicVideoPlayer
             showVideo = ModPrefs.GetBool(Plugin.PluginName, "showVideo", true, true);
             placement = (VideoPlacement)ModPrefs.GetInt(Plugin.PluginName, "ScreenPositionMode", (int)VideoPlacement.Bottom, true);
 
-            BSEvents.gamePaused += PauseVideo;
-            BSEvents.gameUnpaused += ResumeVideo;
+            BSEvents.songPaused += PauseVideo;
+            BSEvents.songUnpaused += ResumeVideo;
             BSEvents.menuSceneLoadedFresh += OnMenuSceneLoaded;
             BSEvents.menuSceneLoaded += OnMenuSceneLoaded;
             BSEvents.gameSceneLoaded += OnGameSceneLoaded;
@@ -110,11 +111,10 @@ namespace MusicVideoPlayer
 
             OnMenuSceneLoaded();
         }
-
+        
         private void OnMenuSceneLoaded()
         {
             var pointer = Resources.FindObjectsOfTypeAll<VRPointer>().First();
-            Console.WriteLine("Pointer " + pointer?.name);
             if (pointer == null) return;
 
             if (_moverPointer)
@@ -126,13 +126,14 @@ namespace MusicVideoPlayer
             _moverPointer.Init(screen.transform);
             _moverPointer.wasMoved += ScreenWasMoved;
 
+            if(currentVideo != null) PrepareVideo(currentVideo);
             PauseVideo();
+            HideScreen();
         }
 
         private void OnGameSceneLoaded()
         {
             var pointer = Resources.FindObjectsOfTypeAll<VRPointer>().Last();
-            Console.WriteLine("Pointer " + pointer?.name);
             if (pointer == null) return;
             if (_moverPointer)
             {
@@ -142,13 +143,24 @@ namespace MusicVideoPlayer
             _moverPointer = pointer.gameObject.AddComponent<MoverPointer>();
             _moverPointer.Init(screen.transform);
             _moverPointer.wasMoved += ScreenWasMoved;
-            
+
+            if (videoPlayer.time != offsetSec)
+            {
+                // game was restarted
+                if (currentVideo.offset >= 0)
+                {
+                    videoPlayer.time = offsetSec;
+                }
+                else
+                {
+                    videoPlayer.time = 0;
+                }
+            }
             PlayVideo();
         }
 
         private void ScreenWasMoved(Vector3 pos, Quaternion rot, float scale)
         {
-            placement = VideoPlacement.Custom;
             screen.transform.position = pos;
             screen.transform.rotation = rot;
             screen.transform.localScale = scale *  Vector3.one;
@@ -156,11 +168,14 @@ namespace MusicVideoPlayer
             ModPrefs.SetString(Plugin.PluginName, "CustomPosition", pos.ToString());
             ModPrefs.SetString(Plugin.PluginName, "CustomRotation", rot.eulerAngles.ToString());
             ModPrefs.SetFloat(Plugin.PluginName, "CustomScale", scale);
+
+            placement = VideoPlacement.Custom;
+            ModPrefs.SetInt(Plugin.PluginName, "ScreenPositionMode", (int)placement);
         }
 
         private void VideoPlayerErrorReceived(VideoPlayer source, string message)
         {
-            Console.WriteLine(message);
+            Console.WriteLine("[MVP] video player error: " + message);
         }
 
         public void PrepareVideo(VideoData video)
@@ -255,24 +270,25 @@ namespace MusicVideoPlayer
             screen.SetActive(false);
         }
         
-        public static void SetPlacement(VideoPlacement placement)
+        public void SetPlacement(VideoPlacement placement)
         {
-            ScreenManager.placement = placement;
+            this.placement = placement;
             if (Instance.screen == null) return;
-            Instance.screen.transform.position = VideoPlacementSetting.Position(placement);
-            Instance.screen.transform.eulerAngles = VideoPlacementSetting.Rotation(placement);
-            Instance.screen.transform.localScale = VideoPlacementSetting.Scale(placement) * Vector3.one;
+            screen.transform.position = VideoPlacementSetting.Position(placement);
+            screen.transform.eulerAngles = VideoPlacementSetting.Rotation(placement);
+            screen.transform.localScale = VideoPlacementSetting.Scale(placement) * Vector3.one;
         }
 
         public Shader GetShader()
         {
             if (glowShader != null) return glowShader;
             // load shader
-            var myLoadedAssetBundle = AssetBundle.LoadFromFile(Path.Combine(Path.Combine(Environment.CurrentDirectory, "PluginsContent"), "mvp.bundle"));
 
+            var myLoadedAssetBundle = AssetBundle.LoadFromMemory(UIUtilities.GetResource(Assembly.GetExecutingAssembly(), "MusicVideoPlayer.Resources.mvp.bundle"));
+        
             if (myLoadedAssetBundle == null)
             {
-                Console.WriteLine("Failed to load AssetBundle! Make sure PluginsContent/mvp.bundle exists!");
+                Console.WriteLine("[MVP] Failed to load AssetBundle! Make sure PluginsContent/mvp.bundle exists!");
                 return null;
             }
 

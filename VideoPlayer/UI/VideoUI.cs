@@ -114,10 +114,6 @@ namespace MusicVideoPlayer.UI
 
         private void UpdateVideoButton(VideoData selectedVideo)
         {
-            //if (selectedLevel.levelID.Length >= 32)
-            //{
-            _videoButton.interactable = true;
-
             selectedVideo = VideoLoader.Instance.GetVideo(selectedLevel);
 
             if (selectedVideo != null)
@@ -125,7 +121,11 @@ namespace MusicVideoPlayer.UI
                 if (selectedVideo.downloadState == DownloadState.Queued)
                 {
                     // video queued
-
+                    _videoButtonHint.text = "Queued for download";
+                    _videoButtonGlow.gameObject.SetActive(true);
+                    _videoButtonGlow.color = Color.cyan;
+                    _progressCircle.color = Color.cyan;
+                    _progressCircle.fillAmount = 1;
                 }
                 else if (selectedVideo.downloadState == DownloadState.Downloading)
                 {
@@ -146,12 +146,11 @@ namespace MusicVideoPlayer.UI
                 }
                 else
                 {
-                    // notdownloaded, downloading or queued
-                    _videoButtonGlow.gameObject.SetActive(false);
-                    _videoButton.interactable = false;
-                    _videoButtonHint.text = "<color=#808080><size=80%>Video unavailable :(";
+                    // notdownloaded or cancelled
+                    _videoButtonGlow.gameObject.SetActive(true);
+                    _videoButtonHint.text = "<color=#808080><size=80%>Video selected but not downloaded";
+                    _videoButtonGlow.color = Color.yellow;
                     _progressCircle.fillAmount = 1f;
-                    _progressCircle.color = new Color(0.5f, 0.5f, 0.5f);
                 }
             }
             else

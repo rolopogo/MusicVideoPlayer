@@ -16,6 +16,7 @@ namespace MusicVideoPlayer.UI.ViewControllers
     class VideoDetailViewController : VRUIViewController
     {
         public event Action listButtonPressed;
+        public event Action downloadDeleteButtonPressed;
         public event Action previewButtonPressed;
         public event Action backButtonPressed;
 
@@ -24,6 +25,7 @@ namespace MusicVideoPlayer.UI.ViewControllers
         public event Action loopButtonPressed;
 
         private Button _listButton;
+        private Button _downloadDeleteButton;
         private Button _previewButton;
         private Button _loopButton;
         private Button _backButton;
@@ -63,6 +65,12 @@ namespace MusicVideoPlayer.UI.ViewControllers
                 listButtonPressed?.Invoke();
             }, "Search");
 
+            _downloadDeleteButton = BeatSaberUI.CreateUIButton(rectTransform, "CreditsButton", new Vector2(60, 20), new Vector2(30, 8), () =>
+            {
+                downloadDeleteButtonPressed?.Invoke();
+            }, "Delete");
+            _downloadDeleteButton.GetComponentInChildren<HorizontalLayoutGroup>().padding = new RectOffset(0, 0, 0, 0);
+
             _previewButton = BeatSaberUI.CreateUIButton(rectTransform, "CreditsButton", new Vector2(60, -30), new Vector2(30, 8), () =>
             {
                 previewButtonPressed?.Invoke();
@@ -92,11 +100,15 @@ namespace MusicVideoPlayer.UI.ViewControllers
             _subOffset.onClick.AddListener(() => { subOffsetPressed?.Invoke(); });
             _addOffset.onClick.AddListener(() => { addOffsetPressed?.Invoke(); });
 
-            _offsetText = BeatSaberUI.CreateText(rectTransform, "?ms", new Vector2(60, -10));
+            BeatSaberUI.AddHintText(_addOffset.transform as RectTransform, "Video lags behind music\nStart the video earlier");
+            BeatSaberUI.AddHintText(_subOffset.transform as RectTransform, "Video is ahead of music\nStart the video later");
+
+            _offsetText = BeatSaberUI.CreateText(rectTransform, "?", new Vector2(60, -10));
             _offsetText.rectTransform.sizeDelta = new Vector2(14, 8);
             _offsetText.alignment = TextAlignmentOptions.Center;
+            _offsetText.color = Color.white;
 
-            var _offsetTitle = BeatSaberUI.CreateText(rectTransform, "Offset (ms)", new Vector2(60, -3));
+            var _offsetTitle = BeatSaberUI.CreateText(rectTransform, "Video Offset (ms)", new Vector2(60, -3));
             _offsetTitle.rectTransform.sizeDelta = new Vector2(30, 8);
             _offsetTitle.alignment = TextAlignmentOptions.Center;
 
@@ -147,7 +159,7 @@ namespace MusicVideoPlayer.UI.ViewControllers
             (_progressButton.transform as RectTransform).anchorMax = new Vector2(0.5f, 0.5f);
             (_progressButton.transform as RectTransform).anchorMin = new Vector2(0.5f, 0.5f);
             (_progressButton.transform as RectTransform).anchoredPosition = new Vector2(0, 20);
-            (_progressButton.transform as RectTransform).sizeDelta = new Vector2(16, 16);
+            (_progressButton.transform as RectTransform).sizeDelta = new Vector2(18, 18);
             _progressButton.interactable = false;
 
             _progressRingGlow = _progressButton.GetComponentsInChildren<Image>().First(x => x.name == "Glow");
@@ -197,7 +209,11 @@ namespace MusicVideoPlayer.UI.ViewControllers
                 _uploader.SetText("");
                 _duration.SetText("");
 
+                _thumbnail.sprite = null;
                 _thumbnail.color = Color.black;
+
+                _progressCircle.color = Color.white;
+                _progressCircle.fillAmount = 1;
 
                 _progressButton.gameObject.SetActive(true);
                 _progressButton.SetButtonText("N/A");
@@ -207,6 +223,8 @@ namespace MusicVideoPlayer.UI.ViewControllers
                 _subOffset.interactable = false;
                 _previewButton.interactable = false;
                 _loopButton.interactable = false;
+                _downloadDeleteButton.interactable = false;
+                _downloadDeleteButton.SetButtonText("Download");
                 return;
             }
 
@@ -218,10 +236,51 @@ namespace MusicVideoPlayer.UI.ViewControllers
             _loopButton.SetButtonText(selectedVideo.loop ? "Loop" : "Once");
             StartCoroutine(LoadScripts.LoadSprite(selectedVideo.thumbnailURL, _thumbnail, 16f / 9f));
 
-            if (selectedVideo.downloadState == DownloadState.Downloading)
+            if (selectedVideo.downloadState == DownloadState.NotDownloaded)
+            {
+                _progressButton.gameObject.SetActive(false);
+                _progressButton.SetButtonText("Not Downloaded");
+                _progressCircle.color = Color.red;
+                _progressCircle.fillAmount = 1;
+
+                _thumbnail.color = Color.white.ColorWithAlpha(0.2f);
+                _hoverHint.text = "Video selected but not downloaded";
+
+                _addOffset.interactable = false;
+                _subOffset.interactable = false;
+                _previewButton.interactable = false;
+                _loopButton.interactable = false;
+                _downloadDeleteButton.interactable = true;
+                _downloadDeleteButton.SetButtonText("Download");
+            }
+
+            else if (selectedVideo.downloadState == DownloadState.Cancelled)
+            {
+                _progressButton.gameObject.SetActive(false);
+                _progressButton.SetButtonText("Cancelled");
+                _progressCircle.color = Color.red;
+                _progressCircle.fillAmount = 1;
+
+                _thumbnail.color = Color.white.ColorWithAlpha(0.2f);
+                _hoverHint.text = "Download cancelled or encountered an error";
+
+                _addOffset.interactable = false;
+                _subOffset.interactable = false;
+                _previewButton.interactable = false;
+                _loopButton.interactable = false;
+                _downloadDeleteButton.interactable = true;
+                _downloadDeleteButton.SetButtonText("Download");
+            }
+
+            else if (selectedVideo.downloadState == DownloadState.Downloading)
             {
                 _progressButton.gameObject.SetActive(true);
-                SetProgress(selectedVideo.downloadProgress);
+
+                _hoverHint.text = String.Format("Downloading: {0:#.0}% complete", selectedVideo.downloadProgress * 100);
+                _progressButton.SetButtonText(String.Format("{0:#.0}%", selectedVideo.downloadProgress * 100));
+                _progressCircle.color = Color.white;
+                _progressCircle.fillAmount = selectedVideo.downloadProgress;
+                _thumbnail.color = Color.Lerp(Color.white.ColorWithAlpha(0.2f), Color.white, selectedVideo.downloadProgress);
 
                 _hoverHint.text = "Download in progress";
 
@@ -229,23 +288,26 @@ namespace MusicVideoPlayer.UI.ViewControllers
                 _subOffset.interactable = false;
                 _previewButton.interactable = false;
                 _loopButton.interactable = false;
+                _downloadDeleteButton.interactable = true;
+                _downloadDeleteButton.SetButtonText("Cancel");
             }
 
-            if (selectedVideo.downloadState == DownloadState.Downloaded)
+            else if (selectedVideo.downloadState == DownloadState.Downloaded)
             {
                 _progressButton.gameObject.SetActive(false);
 
                 _thumbnail.color = Color.white;
-
                 _hoverHint.text = "Video Ready, Search again to overwrite";
 
                 _addOffset.interactable = true;
                 _subOffset.interactable = true;
                 _previewButton.interactable = true;
                 _loopButton.interactable = true;
+                _downloadDeleteButton.interactable = true;
+                _downloadDeleteButton.SetButtonText("Delete");
             }
 
-            if (selectedVideo.downloadState == DownloadState.Queued)
+            else if (selectedVideo.downloadState == DownloadState.Queued)
             {
                 _progressButton.gameObject.SetActive(true);
                 _progressButton.SetButtonText("Pending");
@@ -259,16 +321,9 @@ namespace MusicVideoPlayer.UI.ViewControllers
                 _subOffset.interactable = false;
                 _previewButton.interactable = false;
                 _loopButton.interactable = false;
+                _downloadDeleteButton.interactable = true;
+                _downloadDeleteButton.SetButtonText("Cancel");
             }
-        }
-
-        public void SetProgress(float progress)
-        {
-            _hoverHint.text = String.Format("Downloading: {0:#.0}%", progress * 100);
-            _progressButton.SetButtonText(String.Format("{0:#.0}%", progress * 100));
-            _progressCircle.color = Color.white;
-            _progressCircle.fillAmount = progress;
-            _thumbnail.color = Color.Lerp(Color.white.ColorWithAlpha(0.2f), Color.white, progress);
         }
     }
 }

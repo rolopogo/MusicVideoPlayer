@@ -46,7 +46,7 @@ namespace MusicVideoPlayer.UI
             title = "Video - " + selectedLevel.songName;
 
             if (firstActivation)
-            {   
+            {
                 if (_videoDetailViewController == null)
                 {
                     _videoDetailViewController = BeatSaberUI.CreateViewController<VideoDetailViewController>();
@@ -57,7 +57,7 @@ namespace MusicVideoPlayer.UI
                     _videoDetailViewController.previewButtonPressed += DetailViewPreviewPressed;
                     _videoDetailViewController.loopButtonPressed += DetailViewLoopPressed;
                     _videoDetailViewController.listButtonPressed += DetailViewSearchPressed;
-
+                    _videoDetailViewController.downloadDeleteButtonPressed += DetailViewDownloadDeletePressed;
                 }
                 if (_videoListViewController == null)
                 {
@@ -82,7 +82,26 @@ namespace MusicVideoPlayer.UI
                 ProvideInitialViewControllers(_videoDetailViewController, null, null);
             }
         }
-        
+
+        private void DetailViewDownloadDeletePressed()
+        {
+            switch (selectedLevelVideo.downloadState){
+                case DownloadState.Downloaded:
+                    selectedLevelVideo.downloadState = DownloadState.NotDownloaded;
+                    VideoLoader.Instance.DeleteVideo(selectedLevelVideo);
+                    VideoDownloaderDownloadProgress(selectedLevelVideo);
+                    return;
+                case DownloadState.Downloading:
+                case DownloadState.Queued:
+                    YouTubeDownloader.Instance.DequeueVideo(selectedLevelVideo);
+                    return;
+                case DownloadState.NotDownloaded:
+                case DownloadState.Cancelled:
+                    QueueDownload(selectedLevelVideo);
+                    return;
+            }
+        }
+
         public void Present()
         {
             _freePlayFlowCoordinator.InvokePrivateMethod("PresentFlowCoordinator", new object[] { this, null, false, false });
@@ -117,6 +136,11 @@ namespace MusicVideoPlayer.UI
             StopPreview();
         }
 
+        private void DetailViewLoopPressed()
+        {
+            selectedLevelVideo.loop = !selectedLevelVideo.loop;
+            _videoDetailViewController.UpdateContent();
+        }
         private void DetailViewPreviewPressed()
         {
             if (previewPlaying)
@@ -130,21 +154,15 @@ namespace MusicVideoPlayer.UI
                 songPreviewPlayer.CrossfadeTo(selectedLevel.audioClip, 0, selectedLevel.audioClip.length, 1f);
 
                 previewPlaying = true;
-                _videoDetailViewController.SetPreviewState(previewPlaying);
+                
             }
-        }
-
-        private void DetailViewLoopPressed()
-        {
-            selectedLevelVideo.loop = !selectedLevelVideo.loop;
-            _videoDetailViewController.UpdateContent();
+            _videoDetailViewController.SetPreviewState(previewPlaying);
         }
 
         private void DetailViewAddOffsetPressed()
         {
             selectedLevelVideo.offset += 100;
             _videoDetailViewController.SetOffsetText(selectedLevelVideo.offset.ToString());
-
             StopPreview();
         }
 
@@ -152,19 +170,15 @@ namespace MusicVideoPlayer.UI
         {
             selectedLevelVideo.offset -= 100;
             _videoDetailViewController.SetOffsetText(selectedLevelVideo.offset.ToString());
-
             StopPreview();
         }
 
         private void StopPreview()
         {
-            if (previewPlaying)
-            {
-                previewPlaying = false;
-                ScreenManager.Instance.PrepareVideo(selectedLevelVideo);
-                songPreviewPlayer.FadeOut();
-                _videoDetailViewController.SetPreviewState(previewPlaying);
-            }
+            previewPlaying = false;
+            ScreenManager.Instance.PrepareVideo(selectedLevelVideo);
+            ScreenManager.Instance.PauseVideo();
+            songPreviewPlayer.FadeOut();
         }
 
         #endregion DetailView
@@ -172,25 +186,21 @@ namespace MusicVideoPlayer.UI
         #region ListView
         private void ListViewDownloadPressed(YTResult result)
         {
-            // TODO
-            // confirm dialogue if a videodata already exists for this song
-            // delete pre-existing mp4 for overwriting
-
             if (selectedLevelVideo != null)
             {
                 // present
                 _simpleDialog.Init("Overwrite video?", $"Do you really want to delete \"{ selectedLevelVideo.title }\"\n and replace it with \"{result.title }\"", "Overwrite", "Cancel");
-                _simpleDialog.didFinishEvent -= (SimpleDialogPromptViewController sender, bool delete) => { DismissViewController(_simpleDialog, null, false); if (delete) StartDownload(result); };
-                _simpleDialog.didFinishEvent += (SimpleDialogPromptViewController sender, bool delete) => { DismissViewController(_simpleDialog, null, false); if (delete) StartDownload(result); };
+                _simpleDialog.didFinishEvent -= (SimpleDialogPromptViewController sender, bool delete) => { DismissViewController(_simpleDialog, null, false); if (delete) QueueDownload(result); };
+                _simpleDialog.didFinishEvent += (SimpleDialogPromptViewController sender, bool delete) => { DismissViewController(_simpleDialog, null, false); if (delete) QueueDownload(result); };
                 PresentViewController(_simpleDialog, null, false);
             }
             else
             {
-                StartDownload(result);
+                QueueDownload(result);
             }
         }
 
-        private void StartDownload(YTResult result)
+        private void QueueDownload(YTResult result)
         {
             // Delete existing
             if (selectedLevelVideo != null)
@@ -216,17 +226,22 @@ namespace MusicVideoPlayer.UI
 
             video.level = selectedLevel;
             selectedLevelVideo = video;
-
-            YouTubeDownloader.Instance.EnqueueVideo(video);
             VideoLoader.Instance.AddVideo(video);
             VideoLoader.SaveVideoToDisk(video);
 
             _videoDetailViewController.SetContent(video);
             _videoDetailViewController.UpdateContent();
 
-            VideoDownloaderDownloadProgress(video);
+            QueueDownload(video);
 
             DismissViewController(_videoListViewController);
+        }
+
+        private void QueueDownload(VideoData video)
+        {
+            YouTubeDownloader.Instance.EnqueueVideo(video);
+            
+            VideoDownloaderDownloadProgress(video);
         }
 
         private void ListViewBackPressed()

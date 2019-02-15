@@ -8,7 +8,7 @@ using UnityEngine;
 
 namespace MusicVideoPlayer.Util
 {
-    public enum VideoPlacement { Background, Left, Right, Bottom, Top, Custom };
+    public enum VideoPlacement { Background, Center, Left, Right, Bottom, Top, Custom };
 
     public class VideoPlacementSetting
     {   
@@ -18,14 +18,16 @@ namespace MusicVideoPlayer.Util
             {
                 case VideoPlacement.Background:
                     return new Vector3(0, 20, 50);
+                case VideoPlacement.Center:
+                    return new Vector3(0, 4.5f, 35);
                 case VideoPlacement.Left:
-                    return new Vector3(-8, 2, 10);
+                    return new Vector3(-8, 2, 11);
                 case VideoPlacement.Right:
-                    return new Vector3(8, 2, 10);
+                    return new Vector3(8, 2, 11);
                 case VideoPlacement.Bottom:
-                    return new Vector3(0, -2, 7);
+                    return new Vector3(0, -1.5f, 7.35f);
                 case VideoPlacement.Top:
-                    return new Vector3(0, 5, 7);
+                    return new Vector3(0, 5, 10);
                 default: // Custom
                     return ModPrefs.GetString(Plugin.PluginName, "CustomPosition", new Vector3(0, 4, 15).ToString(), true).ToVector3();
             }
@@ -37,16 +39,18 @@ namespace MusicVideoPlayer.Util
             {
                 case VideoPlacement.Background:
                     return new Vector3(0, 0, 0);
+                case VideoPlacement.Center:
+                    return new Vector3(0, 0, 0);
                 case VideoPlacement.Left:
-                    return new Vector3(0, -40, 0);
+                    return new Vector3(0, -30, 0);
                 case VideoPlacement.Right:
-                    return new Vector3(0, 40, 0);
+                    return new Vector3(0, 30, 0);
                 case VideoPlacement.Bottom:
                     return new Vector3(15, 0, 0);
                 case VideoPlacement.Top:
-                    return new Vector3(-30, 0, 0);
+                    return new Vector3(-15, 0, 0);
                 default: // Custom
-                    return ModPrefs.GetString(Plugin.PluginName, "CustomRotation", new Vector3(0, 0, -10).ToString(), true).ToVector3();
+                    return ModPrefs.GetString(Plugin.PluginName, "CustomRotation", new Vector3(-10, 0, 0).ToString(), true).ToVector3();
             }
         }
 
@@ -56,16 +60,18 @@ namespace MusicVideoPlayer.Util
             {
                 case VideoPlacement.Background:
                     return 30;
+                case VideoPlacement.Center:
+                    return 8;
                 case VideoPlacement.Left:
-                    return 5;
+                    return 4;
                 case VideoPlacement.Right:
-                    return 5;
+                    return 4;
                 case VideoPlacement.Bottom:
-                    return 3;
+                    return 2;
                 case VideoPlacement.Top:
                     return 3;
                 default: // Custom
-                    return ModPrefs.GetFloat(Plugin.PluginName, "CustomScale", 8f, true);
+                    return ModPrefs.GetFloat(Plugin.PluginName, "CustomScale", 6f, true);
             }
         }
 
@@ -74,6 +80,7 @@ namespace MusicVideoPlayer.Util
             return new float[]
             {
                 (float)VideoPlacement.Background,
+                (float)VideoPlacement.Center,
                 (float)VideoPlacement.Left,
                 (float)VideoPlacement.Right,
                 (float)VideoPlacement.Bottom,
@@ -88,6 +95,8 @@ namespace MusicVideoPlayer.Util
             {
                 case VideoPlacement.Background:
                     return "Background";
+                case VideoPlacement.Center:
+                    return "Center";
                 case VideoPlacement.Left:
                     return "Left";
                 case VideoPlacement.Right:

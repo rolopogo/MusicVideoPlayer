@@ -14,7 +14,7 @@ namespace MusicVideoPlayer
     public sealed class Plugin : IPlugin
     {
         public string Name => "Video Player";
-        public string Version => "1.0.0";
+        public string Version => "1.1.0";
 
         public static Plugin Instance;
 
@@ -32,7 +32,8 @@ namespace MusicVideoPlayer
             BSEvents.OnLoad();
             BSEvents.menuSceneLoadedFresh += OnMenuSceneLoadedFresh;
             Base64Sprites.ConvertToSprites();
-            Application.logMessageReceived += LogCallback;
+
+            //Application.logMessageReceived += LogCallback;
         }
 
         //Called when there is an exception
@@ -69,6 +70,7 @@ namespace MusicVideoPlayer
 
         private void OnMenuSceneLoadedFresh()
         {
+            YouTubeDownloader.OnLoad();
             VideoUI.Instance.OnLoad();
             ScreenManager.OnLoad();
             VideoLoader.OnLoad();
@@ -93,12 +95,12 @@ namespace MusicVideoPlayer
             var placementSetting = subMenu.AddList("Screen Position", VideoPlacementSetting.Modes());
             placementSetting.GetValue += delegate
             {
-                return (float)ScreenManager.placement;
+                return (float)ScreenManager.Instance.placement;
             };
             placementSetting.SetValue += delegate (float value)
             {
-                ScreenManager.SetPlacement((VideoPlacement)value);
-                ModPrefs.SetInt(Plugin.PluginName, "ScreenPositionMode", (int)ScreenManager.placement);
+                ScreenManager.Instance.SetPlacement((VideoPlacement)value);
+                ModPrefs.SetInt(Plugin.PluginName, "ScreenPositionMode", (int)ScreenManager.Instance.placement);
             };
             placementSetting.FormatValue += delegate (float value) { return VideoPlacementSetting.Name((VideoPlacement)value); };
 
@@ -114,8 +116,18 @@ namespace MusicVideoPlayer
                 ModPrefs.SetInt(Plugin.PluginName, "VideoDownloadQuality", (int)YouTubeDownloader.Instance.quality);
             };
             qualitySetting.FormatValue += delegate (float value) { return VideoQualitySetting.Name((VideoQuality)value); };
-        }
 
-        
+
+            var autoDownloadSetting = subMenu.AddBool("Auto Download");
+            autoDownloadSetting.GetValue += delegate
+            {
+                return VideoLoader.Instance.autoDownload;
+            };
+            autoDownloadSetting.SetValue += delegate (bool value)
+            {
+                VideoLoader.Instance.autoDownload = value;
+                ModPrefs.SetBool(Plugin.PluginName, "AutoDownload", ScreenManager.showVideo);
+            };
+        }
     }
 }

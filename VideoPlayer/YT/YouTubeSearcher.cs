@@ -26,7 +26,7 @@ namespace MusicVideoPlayer.YT
 
             if (www.error != null)
             {
-                Console.WriteLine(@"Search: An Error occured while searching.");
+                Console.WriteLine("[MVP] Search: An Error occured while searching.");
                 yield break;
             }
 
@@ -38,7 +38,7 @@ namespace MusicVideoPlayer.YT
             var videoNodes = doc.DocumentNode.SelectNodes("//*[contains(concat(' ', @class, ' '),'yt-lockup-video')]");
             if (videoNodes == null)
             {
-                Console.WriteLine(@"Search: No results found matching: " + search);
+                Console.WriteLine("[MVP] Search: No results found matching: " + search);
             }
             else
             {
