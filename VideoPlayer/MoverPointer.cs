@@ -53,7 +53,7 @@ namespace MusicVideoPlayer
                     }
                 }
 
-            if (_grabbingController == null || !(_grabbingController.triggerValue <= 0.9f)) return;
+            if (_grabbingController == null || GetGrip()) return;
             if (_grabbingController == null) return;
             wasMoved?.Invoke(_realPos, _realRot, _realScale);
             _grabbingController = null;
