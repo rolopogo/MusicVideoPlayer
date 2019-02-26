@@ -10,7 +10,7 @@ namespace MusicVideoPlayer.Util
     class BSEvents : MonoBehaviour
     {
         static BSEvents Instance;
-        
+
         //Scene Events
         public static event Action menuSceneLoaded;
         public static event Action menuSceneLoadedFresh;
@@ -28,7 +28,7 @@ namespace MusicVideoPlayer.Util
         const string Menu = "Menu";
         const string Game = "GameCore";
         const string EmptyTransition = "EmptyTransition";
-        
+
         public static void OnLoad()
         {
             if (Instance != null) return;
@@ -52,7 +52,7 @@ namespace MusicVideoPlayer.Util
             {
                 if (arg1.name == Game)
                 {
-                    gameSceneActive?.Invoke();
+                    InvokeSafe(gameSceneActive);
 
                     var sceneManager = Resources.FindObjectsOfTypeAll<GameScenesManager>().FirstOrDefault();
 
@@ -66,26 +66,46 @@ namespace MusicVideoPlayer.Util
                 {
                     if (arg0.name == EmptyTransition)
                     {
-                        menuSceneLoadedFresh?.Invoke();
+                        InvokeSafe(menuSceneLoadedFresh);
                     }
                     else
                     {
-                        menuSceneLoaded?.Invoke();
+                        InvokeSafe(menuSceneLoaded);
                     }
                 }
             } catch (Exception e)
             {
-                Console.WriteLine("[BSEvents] " + e); 
+                Console.WriteLine("[BSEvents] " + e);
             }
         }
 
         private void GameSceneSceneWasLoaded()
         {
-            Resources.FindObjectsOfTypeAll<GamePauseManager>().First().GetPrivateField<Signal>("_gameDidResumeSignal").Subscribe(delegate () { songUnpaused?.Invoke(); });
-            Resources.FindObjectsOfTypeAll<GamePauseManager>().First().GetPrivateField<Signal>("_gameDidPauseSignal").Subscribe(delegate () { songPaused?.Invoke(); });
+            // Prevent firing this event when returning to menu
+            Resources.FindObjectsOfTypeAll<GameScenesManager>().First().transitionDidFinishEvent -= GameSceneSceneWasLoaded;
 
-            gameSceneLoaded?.Invoke();
+            var pauseManager = Resources.FindObjectsOfTypeAll<GamePauseManager>().First();
+            pauseManager.GetPrivateField<Signal>("_gameDidResumeSignal").Subscribe(delegate () { InvokeSafe(songUnpaused); });
+            pauseManager.GetPrivateField<Signal>("_gameDidPauseSignal").Subscribe(delegate () { InvokeSafe(songPaused); });
+
+            InvokeSafe(gameSceneLoaded);
         }
-        
+
+        public void InvokeSafe(Action action, params object[] args)
+        {
+            if (action == null) return;
+            foreach (Delegate invoc in action.GetInvocationList())
+            {
+                try
+                {
+                    invoc?.DynamicInvoke(args);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"Caught Exception when executing event");
+                    Console.WriteLine(e);
+                }
+            }
+        }
     }
 }
