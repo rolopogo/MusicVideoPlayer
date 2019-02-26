@@ -179,6 +179,7 @@ namespace MusicVideoPlayer.UI
             ScreenManager.Instance.PrepareVideo(selectedLevelVideo);
             ScreenManager.Instance.PauseVideo();
             songPreviewPlayer.FadeOut();
+            _videoDetailViewController.SetPreviewState(previewPlaying);
         }
 
         #endregion DetailView
