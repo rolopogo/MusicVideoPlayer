@@ -13,8 +13,8 @@ namespace MusicVideoPlayer
 {
     public sealed class Plugin : IPlugin
     {
-        public string Name => "Video Player";
-        public string Version => "1.1.0";
+        public string Name => "Music Video Player";
+        public string Version => "1.1.1";
 
         public static Plugin Instance;
 
