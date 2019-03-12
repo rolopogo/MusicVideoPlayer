@@ -117,12 +117,13 @@ namespace MusicVideoPlayer.Util
         public static void SaveVideoToDisk(VideoData video)
         {
             if (video == null) return;
-            //File.WriteAllText(Path.Combine(GetLevelPath(video.level), "video.json"), JsonUtility.ToJson(video));
+            if (!Directory.Exists(GetLevelPath(video.level))) Directory.CreateDirectory(GetLevelPath(video.level));
+            File.WriteAllText(Path.Combine(GetLevelPath(video.level), "video.json"), JsonUtility.ToJson(video));
 
-            using (StreamWriter streamWriter = File.CreateText(Path.Combine(GetLevelPath(video.level), "video.json")))
-            {
-                streamWriter.Write(JsonUtility.ToJson(video));
-            }
+            //using (StreamWriter streamWriter = File.CreateText(Path.Combine(GetLevelPath(video.level), "video.json")))
+            //{
+            //    streamWriter.Write(JsonUtility.ToJson(video));
+            //}
         }
 
         private void RetrieveAllVideoData(SongLoader songLoader, List<CustomLevel> levels)
