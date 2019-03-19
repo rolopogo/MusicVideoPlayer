@@ -13,34 +13,25 @@ using MusicVideoPlayer.YT;
 
 namespace MusicVideoPlayer.UI.ViewControllers
 {
-    enum TopButtonsState { Select, SortBy, Search, Playlists };
 
-    class VideoListViewController : VRUIViewController, TableView.IDataSource
+    class VideoListViewController : CustomListViewController
     {
-        public event Action<int> didSelectRow;
-
         public event Action searchButtonPressed;
         public event Action<YTResult> downloadButtonPressed;
-        public event Action backButtonPressed;
         
         public List<YTResult> resultsList = new List<YTResult>();
-
-        private Button _pageUpButton;
-        private Button _pageDownButton;
-
+        
         private Button _searchButton;
         private Button _downloadButton;
-        private Button _backButton;
-
+        
         private GameObject _loadingIndicator;
-
-        private TableView _videosTableView;
-        private LevelListTableCell _videoListTableCellInstance;
-
+        
         private int _lastSelectedRow;
 
         protected override void DidActivate(bool firstActivation, ActivationType type)
         {
+            base.DidActivate(firstActivation, type);
+
             if (firstActivation && type == ActivationType.AddedToHierarchy)
             {   
                 _backButton = BeatSaberUI.CreateBackButton(rectTransform as RectTransform, delegate () { backButtonPressed?.Invoke(); });
@@ -48,28 +39,6 @@ namespace MusicVideoPlayer.UI.ViewControllers
                 RectTransform container = new GameObject("VideoListContainer", typeof(RectTransform)).transform as RectTransform;
                 container.SetParent(rectTransform, false);
                 container.sizeDelta = new Vector2(105f, 0f);
-                
-                _pageUpButton = Instantiate(Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "PageUpButton")), rectTransform, false);
-                (_pageUpButton.transform as RectTransform).anchorMin = new Vector2(0.5f, 1f);
-                (_pageUpButton.transform as RectTransform).anchorMax = new Vector2(0.5f, 1f);
-                (_pageUpButton.transform as RectTransform).anchoredPosition = new Vector2(0f, -10f);
-                (_pageUpButton.transform as RectTransform).sizeDelta = new Vector2(40f, 10f);
-                _pageUpButton.interactable = true;
-                _pageUpButton.onClick.AddListener(delegate ()
-                {
-                    _videosTableView.PageScrollUp();
-                });
-
-                _pageDownButton = Instantiate(Resources.FindObjectsOfTypeAll<Button>().First(x => (x.name == "PageDownButton")), rectTransform, false);
-                (_pageDownButton.transform as RectTransform).anchorMin = new Vector2(0.5f, 0f);
-                (_pageDownButton.transform as RectTransform).anchorMax = new Vector2(0.5f, 0f);
-                (_pageDownButton.transform as RectTransform).anchoredPosition = new Vector2(0f, 10f);
-                (_pageDownButton.transform as RectTransform).sizeDelta = new Vector2(40f, 10f);
-                _pageDownButton.interactable = true;
-                _pageDownButton.onClick.AddListener(delegate ()
-                {
-                    _videosTableView.PageScrollDown();
-                });
                 
                 _searchButton = BeatSaberUI.CreateUIButton(rectTransform, "CreditsButton", new Vector2(60, -20), new Vector2(30, 8), () =>
                 {
@@ -87,39 +56,28 @@ namespace MusicVideoPlayer.UI.ViewControllers
                 (_loadingIndicator.transform as RectTransform).anchorMax = new Vector2(0.5f, 0.5f);
                 (_loadingIndicator.transform as RectTransform).anchoredPosition = new Vector2(0f, 0f);
                 _loadingIndicator.SetActive(true);
-                
-                _videoListTableCellInstance = Resources.FindObjectsOfTypeAll<LevelListTableCell>().First(x => (x.name == "LevelListTableCell"));
-                _videosTableView = new GameObject().AddComponent<TableView>();
-                _videosTableView.transform.SetParent(container, false);
 
-                _videosTableView.SetPrivateField("_isInitialized", false);
-                _videosTableView.SetPrivateField("_preallocatedCells", new TableView.CellsGroup[0]);
-                _videosTableView.Init();
+                _customListTableView.didSelectCellWithIdxEvent -= DidSelectRowEvent;
+                _customListTableView.didSelectCellWithIdxEvent += _songsTableView_DidSelectRowEvent;
 
-                RectMask2D viewportMask = Instantiate(Resources.FindObjectsOfTypeAll<RectMask2D>().First(), _videosTableView.transform, false);
-                viewportMask.transform.DetachChildren();
-                _videosTableView.GetComponentsInChildren<RectTransform>().First(x => x.name == "Content").transform.SetParent(viewportMask.rectTransform, false);
-
-                (_videosTableView.transform as RectTransform).anchorMin = new Vector2(0f, 0.5f);
-                (_videosTableView.transform as RectTransform).anchorMax = new Vector2(1f, 0.5f);
-                (_videosTableView.transform as RectTransform).sizeDelta = new Vector2(0f, 60f);
-                (_videosTableView.transform as RectTransform).anchoredPosition = new Vector3(-10f, 0f);
-                
-                _videosTableView.dataSource = this;
-                _videosTableView.didSelectRowEvent += _songsTableView_DidSelectRowEvent;
+                (_customListTableView.transform.parent as RectTransform).sizeDelta = new Vector2(105,0);
+                (_customListTableView.transform as RectTransform).anchorMin = new Vector2(0f, 0.5f);
+                (_customListTableView.transform as RectTransform).anchorMax = new Vector2(1f, 0.5f);
+                (_customListTableView.transform as RectTransform).sizeDelta = new Vector2(0f, 60f);
+                (_customListTableView.transform as RectTransform).anchoredPosition = new Vector3(-10f, 0f);
             }
             else
             {
-                _videosTableView.ReloadData();
+                _customListTableView.ReloadData();
             }
             _downloadButton.interactable = false;
         }
 
         internal void Refresh()
         {
-            _videosTableView.ReloadData();
+            _customListTableView.ReloadData();
             if(_lastSelectedRow > -1)
-                _videosTableView.SelectRow(_lastSelectedRow);
+                _customListTableView.SelectCellWithIdx(_lastSelectedRow);
         }
 
         protected override void DidDeactivate(DeactivationType type)
@@ -134,10 +92,10 @@ namespace MusicVideoPlayer.UI.ViewControllers
             else
                 resultsList = new List<YTResult>(videos);
 
-            if (_videosTableView != null)
+            if (_customListTableView != null)
             {
-                _videosTableView.ReloadData();
-                _videosTableView.ScrollToRow(0, false);
+                _customListTableView.ReloadData();
+                _customListTableView.ScrollToCellWithIdx(0, TableView.ScrollPositionType.Center, false);
                 _lastSelectedRow = -1;
             }
         }
@@ -153,37 +111,34 @@ namespace MusicVideoPlayer.UI.ViewControllers
         private void _songsTableView_DidSelectRowEvent(TableView sender, int row)
         {
             _lastSelectedRow = row;
-            didSelectRow?.Invoke(row);
+            DidSelectRowEvent?.Invoke(_customListTableView,row);
             _downloadButton.interactable = true;
         }
 
-        public float RowHeight()
+        public override int NumberOfCells()
         {
-            return 10f;
-        }
-
-        public int NumberOfRows()
-        {
-
             return resultsList.Count;
         }
 
-        public TableCell CellForRow(int row)
+        public override TableCell CellForIdx(int row)
         {
-            LevelListTableCell _tableCell = Instantiate(_videoListTableCellInstance);
-
-            // fix aspect ratio
-            (_tableCell.transform.Find("CoverImage") as RectTransform).sizeDelta = new Vector2(160f/9f, 10);
+            LevelListTableCell _tableCell = GetTableCell(row, false);
+            
+            // fix aspect ratios
+            (_tableCell.transform.Find("CoverImage") as RectTransform).sizeDelta = new Vector2(160f / 9f, 10);
             (_tableCell.transform.Find("CoverImage") as RectTransform).anchoredPosition += new Vector2(160f / 9f / 2f, 0f);
-            (_tableCell.transform.Find("CoverImage") as RectTransform).GetComponent<UnityEngine.UI.Image>().preserveAspect = false;
+            (_tableCell.transform.Find("CoverImage") as RectTransform).GetComponent<UnityEngine.UI.Image>().preserveAspect = true;
 
             (_tableCell.transform.Find("SongName") as RectTransform).anchoredPosition += new Vector2(160f / 9f, 0f);
             (_tableCell.transform.Find("Author") as RectTransform).anchoredPosition += new Vector2(160f / 9f, 0f);
 
+            // Fill in data
+            _tableCell.GetPrivateField<TextMeshProUGUI>("_songNameText").text = string.Format("{0}\n<size=80%>{1}</size>", resultsList[row].title, resultsList[row].author);
+            _tableCell.GetPrivateField<TextMeshProUGUI>("_songNameText").color = Color.white;
+            _tableCell.GetPrivateField<TextMeshProUGUI>("_authorText").text = "[" + resultsList[row].duration + "]" + resultsList[row].description;
+            _tableCell.GetPrivateField<TextMeshProUGUI>("_authorText").color = Color.white;
+            StartCoroutine(LoadScripts.LoadSprite(resultsList[row].thumbnailURL, _tableCell.transform.Find("CoverImage").GetComponent<UnityEngine.UI.Image>(), 16f/9f));
             _tableCell.reuseIdentifier = "VideosTableCell";
-            _tableCell.songName = string.Format("{0}\n<size=80%>{1}</size>", resultsList[row].title, resultsList[row].author);
-            _tableCell.author = "[" + resultsList[row].duration + "]" + resultsList[row].description;
-            StartCoroutine(LoadScripts.LoadSprite(resultsList[row].thumbnailURL, _tableCell));
 
             return _tableCell;
         }

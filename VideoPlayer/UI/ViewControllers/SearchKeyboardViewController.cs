@@ -1,14 +1,11 @@
 ﻿using MusicVideoPlayer.UI.UIElements;
-using CustomUI.BeatSaber;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using TMPro;
 using UnityEngine;
 using VRUI;
 using UnityEngine.UI;
+using TMPro;
+using CustomUI.BeatSaber;
 
 namespace MusicVideoPlayer.UI.ViewControllers
 {

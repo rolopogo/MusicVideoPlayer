@@ -15,11 +15,33 @@ namespace MusicVideoPlayer.YT
 {
     public class YouTubeDownloader : MonoBehaviour
     {
-        public event Action<VideoData> downloadProgress;
+        class VideoDownload
+        {
+            public VideoData video;
+            public int downloadAttempts;
+            public float timeSinceLastUpdate;
 
+            public VideoDownload(VideoData video)
+            {
+                this.video = video;
+                downloadAttempts = 0;
+                timeSinceLastUpdate = 0;
+            }
+
+            public void Update()
+            {
+                timeSinceLastUpdate = 0;
+            }
+        }
+
+        const float TimeoutDuration = 10;
+        const int MaxRetries = 3;
+
+        public event Action<VideoData> downloadProgress;
+        
         public VideoQuality quality = VideoQuality.Medium;
 
-        Queue<VideoData> videoQueue;
+        Queue<VideoDownload> videoQueue;
         bool downloading;
         bool updated;
 
@@ -32,18 +54,17 @@ namespace MusicVideoPlayer.YT
             {
                 Instance = new GameObject("YoutubeDownloader").AddComponent<YouTubeDownloader>();
                 DontDestroyOnLoad(Instance);
-                Instance.videoQueue = new Queue<VideoData>();
+                Instance.videoQueue = new Queue<VideoDownload>();
                 Instance.quality = (VideoQuality)ModPrefs.GetInt(Plugin.PluginName, "VideoDownloadQuality", (int)VideoQuality.Medium, true);
                 Instance.downloading = false;
                 Instance.updated = false;
                 Instance.UpdateYDL();
             }
-
         }
 
         public void EnqueueVideo(VideoData video)
         {
-            videoQueue.Enqueue(video);
+            videoQueue.Enqueue(new VideoDownload(video));
             if (!downloading)
             {
                 video.downloadState = DownloadState.Queued;
@@ -63,10 +84,11 @@ namespace MusicVideoPlayer.YT
             downloading = true;
 
             if (!updated) yield return new WaitUntil(() => updated);
-
-            VideoData video = videoQueue.Peek();
             
-            if (video.downloadState == DownloadState.Cancelled)
+            VideoDownload download = videoQueue.Peek();
+            VideoData video = download.video;
+
+            if (video.downloadState == DownloadState.Cancelled || download.downloadAttempts > MaxRetries)
             {
                 // skip
                 videoQueue.Dequeue();
@@ -85,8 +107,12 @@ namespace MusicVideoPlayer.YT
             }
             Console.WriteLine("[MVP] Downloading: " + video.title);
 
+            StopCoroutine(Countdown(download));
+
             video.downloadState = DownloadState.Downloading;
             downloadProgress?.Invoke(video);
+            download.Update();
+
             string levelPath = VideoLoader.GetLevelPath(video.level);
             if (!Directory.Exists(levelPath)) Directory.CreateDirectory(levelPath);
             
@@ -128,15 +154,13 @@ namespace MusicVideoPlayer.YT
             ydl.OutputDataReceived += (sender, e) => {
                 if (e.Data != null)
                 {
-                    //[download]  81.8% of 40.55MiB at  4.80MiB/s ETA 00:01
-                    //[download] Resuming download at byte 48809440
-                    //
                     Regex rx = new Regex(@"(\d*).\d%+");
                     Match match = rx.Match(e.Data);
                     if (match.Success)
                     {
                         video.downloadProgress = float.Parse(match.Value.Substring(0, match.Value.Length - 1)) / 100;
                         downloadProgress?.Invoke(video);
+                        download.Update();
                     }
                     Console.WriteLine("[MVP] " + e.Data);
                 }
@@ -145,13 +169,15 @@ namespace MusicVideoPlayer.YT
             ydl.ErrorDataReceived += (sender, e) => {
                 if (e.Data.Length < 3) return;
                 //to do: check these errors are problems - redownload or skip file when an error occurs
-                video.downloadState = DownloadState.Cancelled;
+                //video.downloadState = DownloadState.Cancelled;
                 downloadProgress?.Invoke(video);
+                download.Update();
             };
 
             ydl.Exited += (sender, e) => {
-                // to do: check that the file was indeed downloaded correctly
                 
+                StopCoroutine(Countdown(download));
+
                 if (video.downloadState == DownloadState.Cancelled)
                 {
                     VideoLoader.Instance.DeleteVideo(video);
@@ -181,15 +207,11 @@ namespace MusicVideoPlayer.YT
 
         public void OnApplicationQuit()
         {
+            StopAllCoroutines();
             ydl.Close(); // or .Kill()
             ydl.Dispose();
         }
-
-        public VideoData GetDownloadingVideo(IBeatmapLevel level)
-        {
-            return videoQueue.FirstOrDefault(x => x.level == level);
-        }
-
+        
         private IEnumerator VerifyDownload(VideoData video)
         {
             yield return new WaitForSecondsRealtime(1);
@@ -199,6 +221,26 @@ namespace MusicVideoPlayer.YT
                 // video okay?
                 downloadProgress?.Invoke(video);
             }
+        }
+
+        IEnumerator Countdown(VideoDownload download)
+        {
+            while (download.timeSinceLastUpdate < TimeoutDuration)
+            {
+                download.timeSinceLastUpdate += Time.deltaTime;
+                yield return null;
+            }
+            Timeout();
+        }
+
+        private void Timeout()
+        {
+            VideoDownload download = videoQueue.Dequeue();
+            ydl.Close(); // or .Kill()
+            ydl.Dispose();
+            download.downloadAttempts++;
+            videoQueue.Enqueue(download);
+            DownloadVideo();
         }
 
         private void UpdateYDL()

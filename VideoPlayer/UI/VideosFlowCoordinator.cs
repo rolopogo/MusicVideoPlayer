@@ -19,7 +19,6 @@ namespace MusicVideoPlayer.UI
 
         private MainFlowCoordinator _mainFlowCoordinator;
         private FlowCoordinator _freePlayFlowCoordinator;
-        private BeatmapDifficultyViewController _difficultyViewController;
         private SongPreviewPlayer songPreviewPlayer;
 
         private SearchKeyboardViewController _searchViewController;
@@ -35,8 +34,7 @@ namespace MusicVideoPlayer.UI
         {
             _mainFlowCoordinator = Resources.FindObjectsOfTypeAll<MainFlowCoordinator>().FirstOrDefault();
             _mainFlowCoordinator.GetPrivateField<MainMenuViewController>("_mainMenuViewController").didFinishEvent += SongListTweaks_didFinishEvent;
-            _difficultyViewController = Resources.FindObjectsOfTypeAll<BeatmapDifficultyViewController>().FirstOrDefault();
-            _difficultyViewController.didSelectDifficultyEvent += DifficultyViewControllerDidSelectDifficultyEvent;
+            BSEvents.levelSelected += HandleDidSelectLevel;
             YouTubeDownloader.Instance.downloadProgress += VideoDownloaderDownloadProgress;
              songPreviewPlayer = Resources.FindObjectsOfTypeAll<SongPreviewPlayer>().First();
         }
@@ -44,34 +42,37 @@ namespace MusicVideoPlayer.UI
         protected override void DidActivate(bool firstActivation, ActivationType activationType)
         {
             title = "Video - " + selectedLevel.songName;
-
-            if (firstActivation)
+            
+            if (_videoDetailViewController == null)
             {
-                if (_videoDetailViewController == null)
-                {
-                    _videoDetailViewController = BeatSaberUI.CreateViewController<VideoDetailViewController>();
-                    _videoDetailViewController.Init();
-                    _videoDetailViewController.backButtonPressed += DetailViewBackPressed;
-                    _videoDetailViewController.addOffsetPressed += DetailViewAddOffsetPressed;
-                    _videoDetailViewController.subOffsetPressed += DetailViewSubOffsetPressed;
-                    _videoDetailViewController.previewButtonPressed += DetailViewPreviewPressed;
-                    _videoDetailViewController.loopButtonPressed += DetailViewLoopPressed;
-                    _videoDetailViewController.listButtonPressed += DetailViewSearchPressed;
-                    _videoDetailViewController.downloadDeleteButtonPressed += DetailViewDownloadDeletePressed;
-                }
-                if (_videoListViewController == null)
-                {
-                    _videoListViewController = BeatSaberUI.CreateViewController<VideoListViewController>();
-                    _videoListViewController.backButtonPressed += ListViewBackPressed;
-                    _videoListViewController.downloadButtonPressed += ListViewDownloadPressed;
-                    _videoListViewController.searchButtonPressed += ListViewSearchPressed;
-                }
-
-                _simpleDialog = Resources.FindObjectsOfTypeAll<MainFlowCoordinator>().First().GetPrivateField<SimpleDialogPromptViewController>("_simpleDialogPromptViewController");
+                _videoDetailViewController = BeatSaberUI.CreateViewController<VideoDetailViewController>();
+                _videoDetailViewController.Init();
+                _videoDetailViewController.backButtonPressed += DetailViewBackPressed;
+                _videoDetailViewController.addOffsetPressed += DetailViewAddOffsetPressed;
+                _videoDetailViewController.subOffsetPressed += DetailViewSubOffsetPressed;
+                _videoDetailViewController.previewButtonPressed += DetailViewPreviewPressed;
+                _videoDetailViewController.loopButtonPressed += DetailViewLoopPressed;
+                _videoDetailViewController.listButtonPressed += DetailViewSearchPressed;
+                _videoDetailViewController.downloadDeleteButtonPressed += DetailViewDownloadDeletePressed;
+            }
+            if (_videoListViewController == null)
+            {
+                _videoListViewController = BeatSaberUI.CreateViewController<VideoListViewController>();
+                _videoListViewController.backButtonPressed += ListViewBackPressed;
+                _videoListViewController.downloadButtonPressed += ListViewDownloadPressed;
+                _videoListViewController.searchButtonPressed += ListViewSearchPressed;
+            }
+            if (_simpleDialog == null)
+            {
+                _simpleDialog = Resources.FindObjectsOfTypeAll<SimpleDialogPromptViewController>().First();
                 _simpleDialog = Instantiate(_simpleDialog.gameObject, _simpleDialog.transform.parent).GetComponent<SimpleDialogPromptViewController>();
             }
             if (activationType == FlowCoordinator.ActivationType.AddedToHierarchy)
             {
+                Console.WriteLine("selectedLevelVideo = " + selectedLevelVideo!=null);
+                Console.WriteLine("_videoDetailViewController = " + _videoDetailViewController != null);
+                Console.WriteLine("_videoListViewController = " + _videoListViewController != null);
+                Console.WriteLine("_simpleDialog = " + _simpleDialog != null);
                 _videoDetailViewController.SetContent(selectedLevelVideo);
                 previewPlaying = false;
                 _videoDetailViewController.SetPreviewState(previewPlaying);
@@ -151,7 +152,7 @@ namespace MusicVideoPlayer.UI
             {
                 // start preview
                 ScreenManager.Instance.PlayVideo();
-                songPreviewPlayer.CrossfadeTo(selectedLevel.audioClip, 0, selectedLevel.audioClip.length, 1f);
+                songPreviewPlayer.CrossfadeTo(selectedLevel.beatmapLevelData.audioClip, 0, selectedLevel.beatmapLevelData.audioClip.length, 1f);
 
                 previewPlaying = true;
                 
@@ -190,9 +191,7 @@ namespace MusicVideoPlayer.UI
             if (selectedLevelVideo != null)
             {
                 // present
-                _simpleDialog.Init("Overwrite video?", $"Do you really want to delete \"{ selectedLevelVideo.title }\"\n and replace it with \"{result.title }\"", "Overwrite", "Cancel");
-                _simpleDialog.didFinishEvent -= (SimpleDialogPromptViewController sender, bool delete) => { DismissViewController(_simpleDialog, null, false); if (delete) QueueDownload(result); };
-                _simpleDialog.didFinishEvent += (SimpleDialogPromptViewController sender, bool delete) => { DismissViewController(_simpleDialog, null, false); if (delete) QueueDownload(result); };
+                _simpleDialog.Init("Overwrite video?", $"Do you really want to delete \"{ selectedLevelVideo.title }\"\n and replace it with \"{result.title }\"", "Overwrite", "Cancel", delegate (int button) { if (button == 0) QueueDownload(result); });
                 PresentViewController(_simpleDialog, null, false);
             }
             else
@@ -309,9 +308,10 @@ namespace MusicVideoPlayer.UI
             }
         }
 
-        public void DifficultyViewControllerDidSelectDifficultyEvent(BeatmapDifficultyViewController sender, IDifficultyBeatmap beatmap)
+        public void HandleDidSelectLevel(LevelPackLevelsViewController sender, IPreviewBeatmapLevel level)
         {
-            selectedLevel = beatmap.level;
+            selectedLevel = Resources.FindObjectsOfTypeAll<BeatmapLevelSO>().First(x=>x.levelID == level.levelID);
+            
             selectedLevelVideo = VideoLoader.Instance.GetVideo(selectedLevel);
             ScreenManager.Instance.PrepareVideo(selectedLevelVideo);
         }

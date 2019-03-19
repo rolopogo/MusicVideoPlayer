@@ -35,7 +35,6 @@ namespace MusicVideoPlayer.UI
         private Button _videoButton;
         private Image _videoButtonGlow;
         private HoverHint _videoButtonHint;
-        private BeatmapDifficultyViewController _difficultyViewController;
 
         private Image _progressCircle;
 
@@ -52,20 +51,21 @@ namespace MusicVideoPlayer.UI
 
             _videoFlowCoordinator.finished += VideoFlowCoordinatorFinished;
             _videoFlowCoordinator.Init();
+            
+            BSEvents.levelSelected += HandleDidSelectLevel;
+            
+            var _buttons = Resources.FindObjectsOfTypeAll<RectTransform>().First(x => x.name == "PlayButtons");
+            var _playbutton = _buttons.GetComponentsInChildren<Button>().First(x => x.name == "PlayButton");
+            var _practiceButton = _buttons.GetComponentsInChildren<Button>().First(x => x.name == "PracticeButton");
 
-            _difficultyViewController = Resources.FindObjectsOfTypeAll<BeatmapDifficultyViewController>().FirstOrDefault();
-            _difficultyViewController.didSelectDifficultyEvent += DifficultyViewControllerDidSelectDifficultyEvent;
+            var _coverImage = _buttons.parent.parent.Find("Level/CoverImage");
 
-            var _detailViewController = Resources.FindObjectsOfTypeAll<StandardLevelDetailViewController>().First(x => x.name == "StandardLevelDetailViewController");
-
-            RectTransform buttonsRect = _detailViewController.GetComponentsInChildren<RectTransform>().First(x => x.name == "Buttons");
-            var _playbutton = buttonsRect.GetComponentsInChildren<Button>().First(x => x.name == "PlayButton");
-            var _practiceButton = buttonsRect.GetComponentsInChildren<Button>().First(x => x.name == "PracticeButton");
-
-            _videoButton = Instantiate(_practiceButton, buttonsRect.parent);
+            _videoButton = Instantiate(_practiceButton, _coverImage.transform);
             _videoButton.name = "VideoButton";
             _videoButton.SetButtonIcon(Base64Sprites.PlayIcon);
-            (_videoButton.transform as RectTransform).anchoredPosition = new Vector2(46, -6);
+            (_videoButton.transform as RectTransform).anchoredPosition = new Vector2(0, 0);
+            (_videoButton.transform as RectTransform).anchorMax = new Vector2(0.5f, 0.5f);
+            (_videoButton.transform as RectTransform).anchorMin = new Vector2(0.5f, 0.5f);
             (_videoButton.transform as RectTransform).sizeDelta = new Vector2(8, 8);
             _videoButton.onClick.AddListener(delegate () { _videoFlowCoordinator.Present(); });
 
@@ -106,11 +106,12 @@ namespace MusicVideoPlayer.UI
             }
         }
 
-        private void DifficultyViewControllerDidSelectDifficultyEvent(BeatmapDifficultyViewController sender, IDifficultyBeatmap beatmap)
+        public void HandleDidSelectLevel(LevelPackLevelsViewController sender, IPreviewBeatmapLevel level)
         {
-            selectedLevel = beatmap.level;
+            selectedLevel = Resources.FindObjectsOfTypeAll<BeatmapLevelSO>().First(x => x.levelID == level.levelID);
             UpdateVideoButton(VideoLoader.Instance.GetVideo(selectedLevel));
         }
+        
 
         private void UpdateVideoButton(VideoData selectedVideo)
         {
@@ -162,16 +163,6 @@ namespace MusicVideoPlayer.UI
                 _progressCircle.fillAmount = 1f;
                 _progressCircle.color = Color.white;
             }
-            //}
-            //else
-            //{
-            //    // OST song - no videos supported yet
-            //    _videoButtonGlow.gameObject.SetActive(false);
-            //    _videoButton.interactable = false;
-            //    _videoButtonHint.text = "<color=#808080><size=80%>Videos not available for OST songs\nsorry :(";
-            //    _progressCircle.fillAmount = 1f;
-            //    _progressCircle.color = new Color(0.5f, 0.5f, 0.5f);
-            //}
         }
     }
 }

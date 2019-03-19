@@ -5,11 +5,10 @@ using VRUI;
 using UnityEngine.UI;
 using Image = UnityEngine.UI.Image;
 using HMUI;
-using TMPro;
 using UnityEngine;
 using CustomUI.BeatSaber;
-using CustomUI.Utilities;
 using MusicVideoPlayer.Util;
+using TMPro;
 
 namespace MusicVideoPlayer.UI.ViewControllers
 {
@@ -114,17 +113,18 @@ namespace MusicVideoPlayer.UI.ViewControllers
 
             // Video data
             _thumbnail = Instantiate(Resources.FindObjectsOfTypeAll<Image>().First(x => x.name == "CoverImage"), rectTransform);
-            _thumbnail.rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
-            _thumbnail.rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
+            _thumbnail.rectTransform.anchorMin = new Vector2(0.5f, 1f);
+            _thumbnail.rectTransform.anchorMax = new Vector2(0.5f, 1f);
+            _thumbnail.rectTransform.pivot = new Vector2(0.5f, 1);
+            _thumbnail.rectTransform.anchoredPosition = new Vector2(0, -5);
             var height = 30f;
             var width = 16f / 9f * height;
-            _thumbnail.rectTransform.anchoredPosition = new Vector2(0 - width / 2, 20 - height / 2);
             _thumbnail.rectTransform.sizeDelta = new Vector2(width, height);
             _thumbnail.preserveAspect = false;
             _thumbnail.sprite = null;
             _thumbnail.transform.SetAsLastSibling();
             
-            _title = BeatSaberUI.CreateText(rectTransform, "TITLE", new Vector2(0, -1));
+            _title = BeatSaberUI.CreateText(rectTransform, "TITLE", new Vector2(0, 0));
             _title.alignment = TextAlignmentOptions.Top;
             _title.maxVisibleLines = 1;
             _title.fontSize = 6;
@@ -149,8 +149,7 @@ namespace MusicVideoPlayer.UI.ViewControllers
             _description.maxVisibleLines = 5;
 
             // Download Progress ring
-            var _detailViewController = Resources.FindObjectsOfTypeAll<StandardLevelDetailViewController>().First(x => x.name == "StandardLevelDetailViewController");
-            var buttonsRect = _detailViewController.GetComponentsInChildren<RectTransform>().First(x => x.name == "Buttons");
+            var buttonsRect = Resources.FindObjectsOfTypeAll<RectTransform>().First(x => x.name == "PlayButtons");
             var _playbutton = buttonsRect.GetComponentsInChildren<Button>().First(x => x.name == "PlayButton");
 
             _progressButton = Instantiate(_playbutton, rectTransform);

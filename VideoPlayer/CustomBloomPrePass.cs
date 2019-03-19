@@ -33,7 +33,7 @@ namespace MusicVideoPlayer
             
             BloomPrePassRenderer bppr = Resources.FindObjectsOfTypeAll<BloomPrePassRenderer>().First();
             _kawaseBlurRenderer = bppr.GetPrivateField<KawaseBlurRenderer>("_kawaseBlurRenderer");
-            _additiveMaterial = new Material(bppr.GetPrivateField<Material>("_additiveMaterial"));
+            _additiveMaterial = new Material(Shader.Find("Hidden/BlitAdd"));
             _additiveMaterial.SetFloat("_Alpha", 1f);
 
             bloomPrePassParams = Resources.FindObjectsOfTypeAll<BloomPrePassParams>().First();
@@ -93,7 +93,7 @@ namespace MusicVideoPlayer
             GL.PopMatrix();
 
             RenderTexture blur2 = RenderTexture.GetTemporary(bloomPrePassParams.textureWidth >> bloomPrePassParams.downsample, bloomPrePassParams.textureHeight >> bloomPrePassParams.downsample, 0, RenderTextureFormat.RGB111110Float, RenderTextureReadWrite.Linear);
-            DoubleBlur(temporary, _bloomPrePassRenderTexture, KawaseBlurRenderer.KernelSize.Kernel127, 0.05f, blur2, KawaseBlurRenderer.KernelSize.Kernel15, 0.02f, bloomPrePassParams.downsample);
+            DoubleBlur(temporary, blur2, KawaseBlurRenderer.KernelSize.Kernel127, 0.07f, KawaseBlurRenderer.KernelSize.Kernel15, 0.03f, bloomPrePassParams.bloom2Alpha, bloomPrePassParams.downsample);
 
             Graphics.Blit(blur2, _bloomPrePassRenderTexture, _additiveMaterial);
 
@@ -136,8 +136,7 @@ namespace MusicVideoPlayer
             return result;
         }
 
-        
-        public virtual void DoubleBlur(RenderTexture src, RenderTexture dest0, KawaseBlurRenderer.KernelSize kernelSize0, float boost0, RenderTexture dest1, KawaseBlurRenderer.KernelSize kernelSize1, float boost1, int downsample)
+        private void DoubleBlur(RenderTexture src, RenderTexture dest, KawaseBlurRenderer.KernelSize kernelSize0, float boost0, KawaseBlurRenderer.KernelSize kernelSize1, float boost1, float secondBlurAlpha, int downsample)
         {
             int[] blurKernel = _kawaseBlurRenderer.GetBlurKernel(kernelSize0);
             int[] blurKernel2 = _kawaseBlurRenderer.GetBlurKernel(kernelSize1);
@@ -153,9 +152,9 @@ namespace MusicVideoPlayer
             descriptor.width = width;
             descriptor.height = height;
             RenderTexture temporary = RenderTexture.GetTemporary(descriptor);
-            _kawaseBlurRenderer.Blur(src, temporary, blurKernel, 0f, downsample, 0, num, false, false);
-            _kawaseBlurRenderer.Blur(temporary, dest0, blurKernel, boost0, 0, num, blurKernel.Length - num, true, false);
-            _kawaseBlurRenderer.Blur(temporary, dest1, blurKernel2, boost1, 0, num, blurKernel2.Length - num, false, false);
+            _kawaseBlurRenderer.Blur(src, temporary, blurKernel, 0f, downsample, 0, num, 0f, 1f, false, KawaseBlurRenderer.WeightsType.None);
+            _kawaseBlurRenderer.Blur(temporary, dest, blurKernel, boost0, 0, num, blurKernel.Length - num, 0f, 1f, false, KawaseBlurRenderer.WeightsType.None);
+            _kawaseBlurRenderer.Blur(temporary, dest, blurKernel2, boost1, 0, num, blurKernel2.Length - num, 0f, secondBlurAlpha, true, KawaseBlurRenderer.WeightsType.None);
             RenderTexture.ReleaseTemporary(temporary);
         }
     }

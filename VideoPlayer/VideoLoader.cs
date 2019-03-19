@@ -45,18 +45,7 @@ namespace MusicVideoPlayer.Util
 
             DontDestroyOnLoad(gameObject);
         }
-
-        public string FetchURLForPlayingSong()
-        {
-            var standardLevelSceneSetup = Resources.FindObjectsOfTypeAll<StandardLevelSceneSetup>().FirstOrDefault();
-            if (standardLevelSceneSetup == null) return null;
-
-            IBeatmapLevel level = standardLevelSceneSetup.GetPrivateField<StandardLevelSceneSetupDataSO>("_standardLevelSceneSetupData")?.difficultyBeatmap?.level;
-            if (level == null) return null;
-
-            return GetVideoPath(level);
-        }
-
+        
         public string GetVideoPath(IBeatmapLevel level)
         {
             VideoData vid;
@@ -135,7 +124,7 @@ namespace MusicVideoPlayer.Util
 
         private void RetrieveOSTVideoData()
         {
-            LevelSO[] levels = Resources.FindObjectsOfTypeAll<LevelSO>().Where(x=> x.GetType() != typeof(CustomLevel)).ToArray();
+            BeatmapLevelSO[] levels = Resources.FindObjectsOfTypeAll<BeatmapLevelSO>().Where(x=> x.GetType() != typeof(CustomLevel)).ToArray();
             
             Action job = delegate
             {
@@ -172,7 +161,7 @@ namespace MusicVideoPlayer.Util
                             HMMainThreadDispatcher.instance.Enqueue(delegate
                             {
                                 if (_loadingCancelled) return;
-                                VideoData video = LoadVideo(result, level.difficultyBeatmaps[0].level);
+                                VideoData video = LoadVideo(result, level.difficultyBeatmapSets[0].difficultyBeatmaps[0].level);
                                 if (video != null)
                                 {
                                     AddVideo(video);
@@ -211,13 +200,12 @@ namespace MusicVideoPlayer.Util
 
         private void RetrieveCustomLevelVideoData(SongLoader songLoader, List<CustomLevel> levels)
         {
-
             Action job = delegate
             {
                 try
                 {
                     float i = 0;
-                    foreach (var level in levels)
+                    foreach (CustomLevel level in levels)
                     {
                         i++;
                         var songPath = level.customSongInfo.path;
@@ -235,7 +223,7 @@ namespace MusicVideoPlayer.Util
                             HMMainThreadDispatcher.instance.Enqueue(delegate
                             {
                                 if (_loadingCancelled) return;
-                                VideoData video = LoadVideo(result, level.difficultyBeatmaps[0].level);
+                                VideoData video = LoadVideo(result, level.difficultyBeatmapSets[0].difficultyBeatmaps[0].level);
                                 if (video != null)
                                 {
                                     AddVideo(video);

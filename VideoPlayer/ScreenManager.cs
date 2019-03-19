@@ -83,7 +83,7 @@ namespace MusicVideoPlayer
             body.transform.localPosition = new Vector3(0, 0, 0.1f);
             body.transform.localScale = new Vector3(16f / 9f + 0.1f, 1.1f, 0.1f);
             Renderer bodyRenderer = body.GetComponent<Renderer>();
-            bodyRenderer.material = new Material(Resources.FindObjectsOfTypeAll<Renderer>().First(x => x.name == "Column").material); // finding objects is wonky because platforms hides them
+            bodyRenderer.material = new Material(Resources.FindObjectsOfTypeAll<Material>().First(x => x.name == "DarkEnvironment1")); // finding objects is wonky because platforms hides them
 
             GameObject videoScreen = GameObject.CreatePrimitive(PrimitiveType.Quad);
             if (videoScreen.GetComponent<Collider>() != null) Destroy(videoScreen.GetComponent<Collider>());
@@ -210,6 +210,7 @@ namespace MusicVideoPlayer
         {
             if (!showVideo) return;
             if (currentVideo == null) return;
+            if (currentVideo.downloadState != DownloadState.Downloaded) return;
 
             ShowScreen();
             vsRenderer.material.color = _onColor;
