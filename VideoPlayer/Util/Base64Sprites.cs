@@ -46,7 +46,8 @@ namespace MusicVideoPlayer.Util
             Texture2D texture = new Texture2D(0, 0, TextureFormat.ARGB32, false, true);
             texture.hideFlags = HideFlags.HideAndDontSave;
             texture.filterMode = FilterMode.Trilinear;
-            texture.LoadImage(imageData);
+            texture.LoadRawTextureData(imageData);
+            texture.Apply();
             return texture;
         }
     }
