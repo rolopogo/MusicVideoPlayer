@@ -1,5 +1,4 @@
 ﻿using CustomUI.Utilities;
-using IllusionPlugin;
 using MusicVideoPlayer.Util;
 using System;
 using System.Collections;
@@ -49,8 +48,8 @@ namespace MusicVideoPlayer
             }
             Instance = this;
 
-            showVideo = ModPrefs.GetBool(Plugin.PluginName, "showVideo", true, true);
-            placement = (VideoPlacement)ModPrefs.GetInt(Plugin.PluginName, "ScreenPositionMode", (int)VideoPlacement.Bottom, true);
+            showVideo = Plugin.config.GetBool("Settings", "showVideo", true, true);
+            placement = (VideoPlacement)Plugin.config.GetInt("Settings", "ScreenPositionMode", (int)VideoPlacement.Bottom, true);
 
             BSEvents.songPaused += PauseVideo;
             BSEvents.songUnpaused += ResumeVideo;
@@ -156,7 +155,13 @@ namespace MusicVideoPlayer
                     videoPlayer.time = 0;
                 }
             }
-            PlayVideo();
+            if(currentVideo != null)
+            {
+                if(currentVideo.downloadState == DownloadState.Downloaded)
+                {
+                    PlayVideo();
+                }
+            }
         }
 
         private void ScreenWasMoved(Vector3 pos, Quaternion rot, float scale)
@@ -165,17 +170,18 @@ namespace MusicVideoPlayer
             screen.transform.rotation = rot;
             screen.transform.localScale = scale *  Vector3.one;
 
-            ModPrefs.SetString(Plugin.PluginName, "CustomPosition", pos.ToString());
-            ModPrefs.SetString(Plugin.PluginName, "CustomRotation", rot.eulerAngles.ToString());
-            ModPrefs.SetFloat(Plugin.PluginName, "CustomScale", scale);
+            Plugin.config.SetString("Placement", "CustomPosition", pos.ToString());
+            Plugin.config.SetString("Placement", "CustomRotation", rot.eulerAngles.ToString());
+            Plugin.config.SetFloat("Placement", "CustomScale", scale);
 
             placement = VideoPlacement.Custom;
-            ModPrefs.SetInt(Plugin.PluginName, "ScreenPositionMode", (int)placement);
+            Plugin.config.SetInt("Settings", "ScreenPositionMode", (int)placement);
         }
 
         private void VideoPlayerErrorReceived(VideoPlayer source, string message)
         {
-            Console.WriteLine("[MVP] video player error: " + message);
+            if (message == "Can't play movie []") return;
+            Plugin.logger.Warn("Video player error: " + message);
         }
 
         public void PrepareVideo(VideoData video)
@@ -287,12 +293,6 @@ namespace MusicVideoPlayer
 
             var myLoadedAssetBundle = AssetBundle.LoadFromMemory(UIUtilities.GetResource(Assembly.GetExecutingAssembly(), "MusicVideoPlayer.Resources.mvp.bundle"));
         
-            if (myLoadedAssetBundle == null)
-            {
-                Console.WriteLine("[MVP] Failed to load AssetBundle! Make sure PluginsContent/mvp.bundle exists!");
-                return null;
-            }
-
             Shader shader = myLoadedAssetBundle.LoadAsset<Shader>("ScreenGlow");
             myLoadedAssetBundle.Unload(false);
 

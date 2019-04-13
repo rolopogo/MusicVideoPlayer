@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using SongLoaderPlugin;
 using UnityEngine;
 using System.IO;
-using IllusionPlugin;
 using SongLoaderPlugin.OverrideClasses;
 using System.Diagnostics;
 using MusicVideoPlayer.YT;
@@ -40,7 +39,7 @@ namespace MusicVideoPlayer.Util
             if (Instance != null) return;
             Instance = this;
 
-            autoDownload = ModPrefs.GetBool(Plugin.PluginName, "autoDownload", false, true);
+            autoDownload = Plugin.config.GetBool("Settings", "autoDownload", false, true);
             SongLoader.SongsLoadedEvent += RetrieveAllVideoData;
 
             DontDestroyOnLoad(gameObject);
@@ -170,16 +169,16 @@ namespace MusicVideoPlayer.Util
                         }
                         catch (Exception e)
                         {
-                            Console.WriteLine("[MVP] Failed to load song folder: " + result);
-                            Console.WriteLine(e.ToString());
+                            Plugin.logger.Error("Failed to load song folder: " + result);
+                            Plugin.logger.Error(e.ToString());
                         }
                     }
 
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine("[MVP] RetrieveOSTVideoData failed:");
-                    Console.WriteLine(e.ToString());
+                    Plugin.logger.Error("RetrieveOSTVideoData failed:");
+                    Plugin.logger.Error(e.ToString());
                 }
             };
 
@@ -233,16 +232,16 @@ namespace MusicVideoPlayer.Util
                         }
                         catch (Exception e)
                         {
-                            Console.WriteLine("[MVP] Failed to load song folder: " + result);
-                            Console.WriteLine(e.ToString());
+                            Plugin.logger.Error("Failed to load song folder: " + result);
+                            Plugin.logger.Error(e.ToString());
                         }
                     }
 
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine("[MVP] RetrieveCustomLevelVideoData failed:");
-                    Console.WriteLine(e.ToString());
+                    Plugin.logger.Error("RetrieveCustomLevelVideoData failed:");
+                    Plugin.logger.Error(e.ToString());
                 }
             };
 
@@ -262,6 +261,8 @@ namespace MusicVideoPlayer.Util
 
         public void DeleteVideo(VideoData video)
         {
+            RemoveVideo(video);
+            File.Delete(Path.Combine(GetLevelPath(video.level), "video.json"));
             File.Delete(GetVideoPath(video));
         }
 
@@ -275,7 +276,7 @@ namespace MusicVideoPlayer.Util
             }
             catch (Exception)
             {
-                Console.WriteLine("[MVP] Error parsing video json: " + jsonPath);
+                Plugin.logger.Warn("Error parsing video json: " + jsonPath);
                 return null;
             }
 
@@ -284,7 +285,7 @@ namespace MusicVideoPlayer.Util
             if (!File.Exists(GetVideoPath(vid)))
             {
                 if (autoDownload) {
-                    Console.WriteLine("[MVP] Couldn't find Video: " + vid.title + " queueing for download...");
+                    Plugin.logger.Info("Couldn't find Video: " + vid.videoPath + " queueing for download...");
                     YouTubeDownloader.Instance.EnqueueVideo(vid);
                 }
             }

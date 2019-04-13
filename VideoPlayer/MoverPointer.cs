@@ -1,5 +1,4 @@
-﻿using IllusionPlugin;
-using System;
+﻿using System;
 using UnityEngine;
 using VRUIControls;
 

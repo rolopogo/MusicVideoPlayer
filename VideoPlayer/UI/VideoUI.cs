@@ -53,17 +53,19 @@ namespace MusicVideoPlayer.UI
             _videoFlowCoordinator.Init();
             
             BSEvents.levelSelected += HandleDidSelectLevel;
-            
-            var _buttons = Resources.FindObjectsOfTypeAll<RectTransform>().First(x => x.name == "PlayButtons");
+
+            var _levelDetailViewController = Resources.FindObjectsOfTypeAll<StandardLevelDetailViewController>().First();
+
+            var _buttons = _levelDetailViewController.transform.Find("LevelDetail/PlayContainer/PlayButtons");
             var _playbutton = _buttons.GetComponentsInChildren<Button>().First(x => x.name == "PlayButton");
             var _practiceButton = _buttons.GetComponentsInChildren<Button>().First(x => x.name == "PracticeButton");
 
-            var _coverImage = _buttons.parent.parent.Find("Level/CoverImage");
+            var _coverImage = _levelDetailViewController.transform.Find("LevelDetail/Level/CoverImage");
 
-            _videoButton = Instantiate(_practiceButton, _coverImage.transform);
+            _videoButton = Instantiate(_practiceButton, _coverImage);
             _videoButton.name = "VideoButton";
             _videoButton.SetButtonIcon(Base64Sprites.PlayIcon);
-            (_videoButton.transform as RectTransform).anchoredPosition = new Vector2(0, 0);
+            (_videoButton.transform as RectTransform).anchoredPosition = new Vector2(0,0); 
             (_videoButton.transform as RectTransform).anchorMax = new Vector2(0.5f, 0.5f);
             (_videoButton.transform as RectTransform).anchorMin = new Vector2(0.5f, 0.5f);
             (_videoButton.transform as RectTransform).sizeDelta = new Vector2(8, 8);
@@ -82,7 +84,6 @@ namespace MusicVideoPlayer.UI
             _progressCircle.type = Image.Type.Filled;
             _progressCircle.fillMethod = Image.FillMethod.Radial360;
             _progressCircle.fillAmount = 1f;
-
         }
 
         private void VideoFlowCoordinatorFinished(VideoData video)
@@ -112,7 +113,6 @@ namespace MusicVideoPlayer.UI
             UpdateVideoButton(VideoLoader.Instance.GetVideo(selectedLevel));
         }
         
-
         private void UpdateVideoButton(VideoData selectedVideo)
         {
             selectedVideo = VideoLoader.Instance.GetVideo(selectedLevel);

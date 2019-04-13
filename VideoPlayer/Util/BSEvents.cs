@@ -57,6 +57,7 @@ namespace MusicVideoPlayer.Util
             if (Instance != null) return;
             GameObject go = new GameObject("BSEvents");
             go.AddComponent<BSEvents>();
+            DontDestroyOnLoad(go);
         }
 
         private void Awake()
@@ -65,10 +66,8 @@ namespace MusicVideoPlayer.Util
             Instance = this;
 
             SceneManager.activeSceneChanged += SceneManagerOnActiveSceneChanged;
-
-            DontDestroyOnLoad(gameObject);
         }
-
+        
         private void SceneManagerOnActiveSceneChanged(Scene arg0, Scene arg1)
         {
             try

@@ -69,10 +69,6 @@ namespace MusicVideoPlayer.UI
             }
             if (activationType == FlowCoordinator.ActivationType.AddedToHierarchy)
             {
-                Console.WriteLine("selectedLevelVideo = " + selectedLevelVideo!=null);
-                Console.WriteLine("_videoDetailViewController = " + _videoDetailViewController != null);
-                Console.WriteLine("_videoListViewController = " + _videoListViewController != null);
-                Console.WriteLine("_simpleDialog = " + _simpleDialog != null);
                 _videoDetailViewController.SetContent(selectedLevelVideo);
                 previewPlaying = false;
                 _videoDetailViewController.SetPreviewState(previewPlaying);
@@ -86,11 +82,12 @@ namespace MusicVideoPlayer.UI
 
         private void DetailViewDownloadDeletePressed()
         {
-            switch (selectedLevelVideo.downloadState){
+            switch (selectedLevelVideo.downloadState) { 
                 case DownloadState.Downloaded:
-                    selectedLevelVideo.downloadState = DownloadState.NotDownloaded;
                     VideoLoader.Instance.DeleteVideo(selectedLevelVideo);
-                    VideoDownloaderDownloadProgress(selectedLevelVideo);
+                    selectedLevelVideo = null;
+                    _videoDetailViewController.SetContent(null);
+                    _videoDetailViewController.UpdateContent();
                     return;
                 case DownloadState.Downloading:
                 case DownloadState.Queued:
@@ -191,7 +188,7 @@ namespace MusicVideoPlayer.UI
             if (selectedLevelVideo != null)
             {
                 // present
-                _simpleDialog.Init("Overwrite video?", $"Do you really want to delete \"{ selectedLevelVideo.title }\"\n and replace it with \"{result.title }\"", "Overwrite", "Cancel", delegate (int button) { if (button == 0) QueueDownload(result); });
+                _simpleDialog.Init("Overwrite video?", $"Do you really want to delete \"{ selectedLevelVideo.title }\"\n and replace it with \"{result.title }\"", "Overwrite", "Cancel", delegate (int button) { if (button == 0) { DismissViewController(_simpleDialog); QueueDownload(result); } });
                 PresentViewController(_simpleDialog, null, false);
             }
             else

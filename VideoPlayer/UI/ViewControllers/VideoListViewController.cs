@@ -122,7 +122,7 @@ namespace MusicVideoPlayer.UI.ViewControllers
 
         public override TableCell CellForIdx(int row)
         {
-            LevelListTableCell _tableCell = GetTableCell(row, false);
+            LevelListTableCell _tableCell = GetTableCell(false);
             
             // fix aspect ratios
             (_tableCell.transform.Find("CoverImage") as RectTransform).sizeDelta = new Vector2(160f / 9f, 10);

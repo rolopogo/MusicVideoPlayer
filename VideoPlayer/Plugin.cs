@@ -1,4 +1,4 @@
-﻿using IllusionPlugin;
+﻿using IPA;
 using UnityEngine.SceneManagement;
 using UnityEngine;
 using System;
@@ -11,62 +11,23 @@ using MusicVideoPlayer.YT;
 
 namespace MusicVideoPlayer
 {
-    public sealed class Plugin : IPlugin
+    public sealed class Plugin : IBeatSaberPlugin
     {
-        public string Name => "Music Video Player";
-        public string Version => "1.2.0";
-
-        public static Plugin Instance;
-
-        public static string PluginName
+        public static IPA.Logging.Logger logger;
+        public static BS_Utils.Utilities.Config config;
+        
+        public void Init(object thisWillBeNull, IPA.Logging.Logger logger)
         {
-            get
-            {
-                return Instance.Name;
-            }
+            Plugin.logger = logger;
         }
 
         public void OnApplicationStart()
         {
-            Instance = this;
             BSEvents.OnLoad();
             BSEvents.menuSceneLoadedFresh += OnMenuSceneLoadedFresh;
+            config = new BS_Utils.Utilities.Config("MVP");
             Base64Sprites.ConvertToSprites();
-
-            //Application.logMessageReceived += LogCallback;
         }
-
-        //Called when there is an exception
-        private void LogCallback(string condition, string stackTrace, LogType type)
-        {
-            if (type == LogType.Log) return;
-            Console.WriteLine(condition);
-            Console.WriteLine(stackTrace);
-        }
-
-        void IPlugin.OnApplicationQuit()
-        {
-            BSEvents.menuSceneLoadedFresh -= OnMenuSceneLoadedFresh;
-            YouTubeDownloader.Instance.OnApplicationQuit();
-        }
-
-        #region Unused
-        public void OnLevelWasInitialized(int level)
-        {
-        }
-
-        public void OnLevelWasLoaded(int level)
-        {
-        }
-
-        public void OnUpdate()
-        {
-        }
-
-        public void OnFixedUpdate()
-        {
-        }
-        #endregion
 
         private void OnMenuSceneLoadedFresh()
         {
@@ -89,7 +50,7 @@ namespace MusicVideoPlayer
             showVideoSetting.SetValue += delegate (bool value)
             {
                 ScreenManager.showVideo = value;
-                ModPrefs.SetBool(Plugin.PluginName, "ShowVideo", ScreenManager.showVideo);
+                config.SetBool("Settings", "ShowVideo", ScreenManager.showVideo);
             };
 
             var placementSetting = subMenu.AddList("Screen Position", VideoPlacementSetting.Modes());
@@ -100,7 +61,7 @@ namespace MusicVideoPlayer
             placementSetting.SetValue += delegate (float value)
             {
                 ScreenManager.Instance.SetPlacement((VideoPlacement)value);
-                ModPrefs.SetInt(Plugin.PluginName, "ScreenPositionMode", (int)ScreenManager.Instance.placement);
+                config.SetInt("Settings", "ScreenPositionMode", (int)ScreenManager.Instance.placement);
             };
             placementSetting.FormatValue += delegate (float value) { return VideoPlacementSetting.Name((VideoPlacement)value); };
 
@@ -113,7 +74,7 @@ namespace MusicVideoPlayer
             qualitySetting.SetValue += delegate (float value)
             {
                 YouTubeDownloader.Instance.quality = (VideoQuality)value;
-                ModPrefs.SetInt(Plugin.PluginName, "VideoDownloadQuality", (int)YouTubeDownloader.Instance.quality);
+                config.SetInt("Settings", "VideoDownloadQuality", (int)YouTubeDownloader.Instance.quality);
             };
             qualitySetting.FormatValue += delegate (float value) { return VideoQualitySetting.Name((VideoQuality)value); };
 
@@ -126,8 +87,24 @@ namespace MusicVideoPlayer
             autoDownloadSetting.SetValue += delegate (bool value)
             {
                 VideoLoader.Instance.autoDownload = value;
-                ModPrefs.SetBool(Plugin.PluginName, "AutoDownload", ScreenManager.showVideo);
+                config.SetBool("Settings", "AutoDownload", ScreenManager.showVideo);
             };
         }
+
+        public void OnApplicationQuit()
+        {
+            BSEvents.menuSceneLoadedFresh -= OnMenuSceneLoadedFresh;
+            YouTubeDownloader.Instance.OnApplicationQuit();
+        }
+
+        public void OnSceneLoaded(Scene scene, LoadSceneMode sceneMode) { }
+
+        public void OnSceneUnloaded(Scene scene) { }
+
+        public void OnActiveSceneChanged(Scene prevScene, Scene nextScene) { }
+
+        public void OnUpdate() { }
+
+        public void OnFixedUpdate() { }
     }
 }

@@ -1,5 +1,4 @@
-﻿using IllusionPlugin;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -29,7 +28,7 @@ namespace MusicVideoPlayer.Util
                 case VideoPlacement.Top:
                     return new Vector3(0, 5, 10);
                 default: // Custom
-                    return ModPrefs.GetString(Plugin.PluginName, "CustomPosition", new Vector3(0, 4, 15).ToString(), true).ToVector3();
+                    return Plugin.config.GetString("Placement", "CustomPosition", new Vector3(0, 4, 15).ToString(), true).ToVector3();
             }
         }
 
@@ -50,7 +49,7 @@ namespace MusicVideoPlayer.Util
                 case VideoPlacement.Top:
                     return new Vector3(-15, 0, 0);
                 default: // Custom
-                    return ModPrefs.GetString(Plugin.PluginName, "CustomRotation", new Vector3(-10, 0, 0).ToString(), true).ToVector3();
+                    return Plugin.config.GetString("Placement", "CustomRotation", new Vector3(-10, 0, 0).ToString(), true).ToVector3();
             }
         }
 
@@ -71,7 +70,7 @@ namespace MusicVideoPlayer.Util
                 case VideoPlacement.Top:
                     return 3;
                 default: // Custom
-                    return ModPrefs.GetFloat(Plugin.PluginName, "CustomScale", 6f, true);
+                    return Plugin.config.GetFloat("Placement", "CustomScale", 6f, true);
             }
         }
 

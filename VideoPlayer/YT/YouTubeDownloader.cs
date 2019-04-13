@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using UnityEngine;
 using MusicVideoPlayer.Util;
 using System.Diagnostics;
-using IllusionPlugin;
 using System.Text.RegularExpressions;
 
 namespace MusicVideoPlayer.YT
@@ -55,7 +54,7 @@ namespace MusicVideoPlayer.YT
                 Instance = new GameObject("YoutubeDownloader").AddComponent<YouTubeDownloader>();
                 DontDestroyOnLoad(Instance);
                 Instance.videoQueue = new Queue<VideoDownload>();
-                Instance.quality = (VideoQuality)ModPrefs.GetInt(Plugin.PluginName, "VideoDownloadQuality", (int)VideoQuality.Medium, true);
+                Instance.quality = (VideoQuality)Plugin.config.GetInt("Settings", "VideoDownloadQuality", (int)VideoQuality.Medium, true);
                 Instance.downloading = false;
                 Instance.updated = false;
                 Instance.UpdateYDL();
@@ -105,7 +104,7 @@ namespace MusicVideoPlayer.YT
                     yield break;
                 }
             }
-            Console.WriteLine("[MVP] Downloading: " + video.title);
+            Plugin.logger.Info("Downloading: " + video.title);
 
             StopCoroutine(Countdown(download));
 
@@ -162,7 +161,7 @@ namespace MusicVideoPlayer.YT
                         downloadProgress?.Invoke(video);
                         download.Update();
                     }
-                    Console.WriteLine("[MVP] " + e.Data);
+                    Plugin.logger.Info(e.Data);
                 }
             };
 
@@ -263,20 +262,20 @@ namespace MusicVideoPlayer.YT
             {
                 if (e.Data != null)
                 {
-                    Console.WriteLine("[MVP] " + e.Data);
+                    Plugin.logger.Info(e.Data);
                 }
             };
 
             ydl.ErrorDataReceived += (sender, e) =>
             {
-                Console.WriteLine("[MVP] " + e.Data);
+                Plugin.logger.Warn(e.Data);
                 //to do: check these errors problems - redownload or skip file when an error occurs
             };
 
             ydl.Exited += (sender, e) =>
             {
                 updated = true;
-                Console.WriteLine("[MVP] Youtube-DL update complete");
+                Plugin.logger.Info("Youtube-DL update complete");
                 ydl.Dispose();
             };
         }

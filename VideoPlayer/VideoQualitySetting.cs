@@ -1,5 +1,4 @@
-﻿using IllusionPlugin;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -25,7 +24,7 @@ namespace MusicVideoPlayer.Util
                 case VideoQuality.Low:
                     return "(bestvideo/best)[height<480][ext=mp4]";
                 default: // Custom
-                    return ModPrefs.GetString(Plugin.PluginName, "CustomDownloadFormat", "bestvideo[filesize<10M][ext=mp4]", true);
+                    return Plugin.config.GetString("Settings", "CustomDownloadFormat", "bestvideo[filesize<10M][ext=mp4]", true);
             }
         }
 

@@ -44,7 +44,7 @@ namespace MusicVideoPlayer.UI.ViewControllers
         private HoverHint _hoverHint;
         private Image _progressCircle;
 
-        private Button _progressButton;
+        private TextMeshProUGUI _progressText;
 
         protected override void DidActivate(bool firstActivation, ActivationType type)
         {
@@ -152,16 +152,17 @@ namespace MusicVideoPlayer.UI.ViewControllers
             var buttonsRect = Resources.FindObjectsOfTypeAll<RectTransform>().First(x => x.name == "PlayButtons");
             var _playbutton = buttonsRect.GetComponentsInChildren<Button>().First(x => x.name == "PlayButton");
 
-            _progressButton = Instantiate(_playbutton, rectTransform);
+            var _progressButton = Instantiate(_playbutton, _thumbnail.transform);
             _progressButton.name = "DownloadProgress";
-            _progressButton.SetButtonText("100%");
             (_progressButton.transform as RectTransform).anchorMax = new Vector2(0.5f, 0.5f);
             (_progressButton.transform as RectTransform).anchorMin = new Vector2(0.5f, 0.5f);
-            (_progressButton.transform as RectTransform).anchoredPosition = new Vector2(0, 20);
+            (_progressButton.transform as RectTransform).anchoredPosition = new Vector2(0, 0);
+            (_progressButton.transform as RectTransform).pivot = new Vector2(0.5f, 0.5f);
             (_progressButton.transform as RectTransform).sizeDelta = new Vector2(18, 18);
-            _progressButton.interactable = false;
-
+            _progressText = _progressButton.GetComponentInChildren<TextMeshProUGUI>();
+            _progressText.text = "100%";
             _progressRingGlow = _progressButton.GetComponentsInChildren<Image>().First(x => x.name == "Glow");
+            Destroy(_progressButton);
             _progressRingGlow.gameObject.SetActive(false);
 
             var hlg = _progressButton.GetComponentsInChildren<HorizontalLayoutGroup>().First(x => x.name == "Content");
@@ -171,8 +172,7 @@ namespace MusicVideoPlayer.UI.ViewControllers
             _progressCircle.type = Image.Type.Filled;
             _progressCircle.fillMethod = Image.FillMethod.Radial360;
             _progressCircle.fillAmount = 1f;
-
-            _progressButton.transform.SetParent(_thumbnail.transform);
+            
             _hoverHint = BeatSaberUI.AddHintText(_thumbnail.transform as RectTransform, "Banana banana banana");
         }
 
@@ -211,11 +211,12 @@ namespace MusicVideoPlayer.UI.ViewControllers
                 _thumbnail.sprite = null;
                 _thumbnail.color = Color.black;
 
+                _progressCircle.gameObject.SetActive(true);
                 _progressCircle.color = Color.white;
                 _progressCircle.fillAmount = 1;
 
-                _progressButton.gameObject.SetActive(true);
-                _progressButton.SetButtonText("N/A");
+                _progressText.gameObject.SetActive(true);
+                _progressText.text = "N/A";
                 _hoverHint.text = "No video selected\nDownload a video";
 
                 _addOffset.interactable = false;
@@ -237,10 +238,8 @@ namespace MusicVideoPlayer.UI.ViewControllers
 
             if (selectedVideo.downloadState == DownloadState.NotDownloaded)
             {
-                _progressButton.gameObject.SetActive(false);
-                _progressButton.SetButtonText("Not Downloaded");
-                _progressCircle.color = Color.red;
-                _progressCircle.fillAmount = 1;
+                _progressText.gameObject.SetActive(false);
+                _progressCircle.gameObject.SetActive(false);
 
                 _thumbnail.color = Color.white.ColorWithAlpha(0.2f);
                 _hoverHint.text = "Video selected but not downloaded";
@@ -255,10 +254,8 @@ namespace MusicVideoPlayer.UI.ViewControllers
 
             else if (selectedVideo.downloadState == DownloadState.Cancelled)
             {
-                _progressButton.gameObject.SetActive(false);
-                _progressButton.SetButtonText("Cancelled");
-                _progressCircle.color = Color.red;
-                _progressCircle.fillAmount = 1;
+                _progressText.gameObject.SetActive(false);
+                _progressCircle.gameObject.SetActive(false);
 
                 _thumbnail.color = Color.white.ColorWithAlpha(0.2f);
                 _hoverHint.text = "Download cancelled or encountered an error";
@@ -273,12 +270,13 @@ namespace MusicVideoPlayer.UI.ViewControllers
 
             else if (selectedVideo.downloadState == DownloadState.Downloading)
             {
-                _progressButton.gameObject.SetActive(true);
-
-                _hoverHint.text = String.Format("Downloading: {0:#.0}% complete", selectedVideo.downloadProgress * 100);
-                _progressButton.SetButtonText(String.Format("{0:#.0}%", selectedVideo.downloadProgress * 100));
+                _progressText.gameObject.SetActive(true);
+                _progressCircle.gameObject.SetActive(true);
+                _progressText.text = String.Format("{0:#.0}%", selectedVideo.downloadProgress * 100);
                 _progressCircle.color = Color.white;
                 _progressCircle.fillAmount = selectedVideo.downloadProgress;
+
+                _hoverHint.text = String.Format("Downloading: {0:#.0}% complete", selectedVideo.downloadProgress * 100);
                 _thumbnail.color = Color.Lerp(Color.white.ColorWithAlpha(0.2f), Color.white, selectedVideo.downloadProgress);
 
                 _hoverHint.text = "Download in progress";
@@ -293,7 +291,8 @@ namespace MusicVideoPlayer.UI.ViewControllers
 
             else if (selectedVideo.downloadState == DownloadState.Downloaded)
             {
-                _progressButton.gameObject.SetActive(false);
+                _progressText.gameObject.SetActive(false);
+                _progressCircle.gameObject.SetActive(false);
 
                 _thumbnail.color = Color.white;
                 _hoverHint.text = "Video Ready, Search again to overwrite";
@@ -308,8 +307,9 @@ namespace MusicVideoPlayer.UI.ViewControllers
 
             else if (selectedVideo.downloadState == DownloadState.Queued)
             {
-                _progressButton.gameObject.SetActive(true);
-                _progressButton.SetButtonText("Pending");
+                _progressText.gameObject.SetActive(true);
+                _progressText.text = "Pending";
+                _progressCircle.gameObject.SetActive(true);
                 _progressCircle.color = Color.cyan;
                 _progressCircle.fillAmount = 1;
 
