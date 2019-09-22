@@ -23,7 +23,7 @@ namespace MusicVideoPlayer
         public string videoPath;
         
         [System.NonSerialized]
-        public IBeatmapLevel level;
+        public IPreviewBeatmapLevel level;
         [System.NonSerialized]
         public float downloadProgress = 0f;
         [System.NonSerialized]

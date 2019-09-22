@@ -18,7 +18,7 @@ namespace MusicVideoPlayer
 
         Material _additiveMaterial;
         BloomPrePassParams bloomPrePassParams;
-        KawaseBlurRenderer _kawaseBlurRenderer;
+//        KawaseBlurRenderer _kawaseBlurRenderer;
 
         Renderer _renderer;
         Mesh _mesh;

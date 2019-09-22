@@ -3,10 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using SongLoaderPlugin;
+using SongCore;
 using UnityEngine;
 using System.IO;
-using SongLoaderPlugin.OverrideClasses;
 using System.Diagnostics;
 using MusicVideoPlayer.YT;
 
@@ -20,7 +19,7 @@ namespace MusicVideoPlayer.Util
 
         public bool autoDownload = false;
 
-        private Dictionary<IBeatmapLevel, VideoData> videos;
+        private Dictionary<IPreviewBeatmapLevel, VideoData> videos;
 
         private HMTask _loadingTask;
         private bool _loadingCancelled;
@@ -40,12 +39,12 @@ namespace MusicVideoPlayer.Util
             Instance = this;
 
             autoDownload = Plugin.config.GetBool("Settings", "autoDownload", false, true);
-            SongLoader.SongsLoadedEvent += RetrieveAllVideoData;
+            Loader.SongsLoadedEvent += RetrieveAllVideoData;
 
             DontDestroyOnLoad(gameObject);
         }
         
-        public string GetVideoPath(IBeatmapLevel level)
+        public string GetVideoPath(IPreviewBeatmapLevel level)
         {
             VideoData vid;
             if (videos.TryGetValue(level, out vid)) return GetVideoPath(vid);
@@ -57,19 +56,19 @@ namespace MusicVideoPlayer.Util
             return Path.Combine(GetLevelPath(video.level), video.videoPath);
         }
 
-        public VideoData GetVideo(IBeatmapLevel level)
+        public VideoData GetVideo(IPreviewBeatmapLevel level)
         {
             VideoData vid;
             if (videos.TryGetValue(level, out vid)) return vid;
             return null;
         }
 
-        public static string GetLevelPath(IBeatmapLevel level)
+        public static string GetLevelPath(IPreviewBeatmapLevel level)
         {
-            if (level is CustomLevel)
+            if (level is CustomPreviewBeatmapLevel)
             {
                 // Custom song
-                return (level as CustomLevel).customSongInfo.path;
+                return (level as CustomPreviewBeatmapLevel).customLevelPath;
             }
             else
             {
@@ -87,7 +86,7 @@ namespace MusicVideoPlayer.Util
             }
         }
 
-        public bool SongHasVideo(IBeatmapLevel level)
+        public bool SongHasVideo(IPreviewBeatmapLevel level)
         {
             return videos.ContainsKey(level);
         }
@@ -114,17 +113,18 @@ namespace MusicVideoPlayer.Util
             //}
         }
 
-        private void RetrieveAllVideoData(SongLoader songLoader, List<CustomLevel> levels)
+        private void RetrieveAllVideoData(Loader songLoader, Dictionary<string, CustomPreviewBeatmapLevel> levels)
         {
-            videos = new Dictionary<IBeatmapLevel, VideoData>();
-            RetrieveCustomLevelVideoData(songLoader, levels);
+            videos = new Dictionary<IPreviewBeatmapLevel, VideoData>();
+            List<CustomPreviewBeatmapLevel> LevelList = new List<CustomPreviewBeatmapLevel>(levels.Values);
+            RetrieveCustomLevelVideoData(LevelList);
             RetrieveOSTVideoData();
         }
 
         private void RetrieveOSTVideoData()
         {
-            BeatmapLevelSO[] levels = Resources.FindObjectsOfTypeAll<BeatmapLevelSO>().Where(x=> x.GetType() != typeof(CustomLevel)).ToArray();
-            
+            BeatmapLevelSO[] levels = Resources.FindObjectsOfTypeAll<BeatmapLevelSO>().Where(x => x.GetType() != typeof(CustomBeatmapLevel)).ToArray();
+
             Action job = delegate
             {
                 try
@@ -197,17 +197,17 @@ namespace MusicVideoPlayer.Util
             _loadingTask.Run();
         }
 
-        private void RetrieveCustomLevelVideoData(SongLoader songLoader, List<CustomLevel> levels)
+        private void RetrieveCustomLevelVideoData(List<CustomPreviewBeatmapLevel> levels)
         {
             Action job = delegate
             {
                 try
                 {
                     float i = 0;
-                    foreach (CustomLevel level in levels)
+                    foreach (CustomPreviewBeatmapLevel level in levels)
                     {
                         i++;
-                        var songPath = level.customSongInfo.path;
+                        var songPath = level.customLevelPath;
                         var results = Directory.GetFiles(songPath, "video.json", SearchOption.AllDirectories);
                         if (results.Length == 0)
                         {
@@ -222,7 +222,7 @@ namespace MusicVideoPlayer.Util
                             HMMainThreadDispatcher.instance.Enqueue(delegate
                             {
                                 if (_loadingCancelled) return;
-                                VideoData video = LoadVideo(result, level.difficultyBeatmapSets[0].difficultyBeatmaps[0].level);
+                                VideoData video = LoadVideo(result, level);
                                 if (video != null)
                                 {
                                     AddVideo(video);
@@ -266,7 +266,7 @@ namespace MusicVideoPlayer.Util
             File.Delete(GetVideoPath(video));
         }
 
-        private VideoData LoadVideo(string jsonPath, IBeatmapLevel level)
+        private VideoData LoadVideo(string jsonPath, IPreviewBeatmapLevel level)
         {
             var infoText = File.ReadAllText(jsonPath);
             VideoData vid;
