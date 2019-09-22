@@ -12,6 +12,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.Video;
 using VRUIControls;
+using BSEvents = MusicVideoPlayer.Util.BSEvents;
 
 namespace MusicVideoPlayer
 {

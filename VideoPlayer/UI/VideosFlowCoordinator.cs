@@ -8,8 +8,9 @@ using VRUI;
 using System.Collections.Generic;
 using System.Linq;
 using MusicVideoPlayer.Util;
-using SongLoaderPlugin;
+//using SongLoaderPlugin;
 using MusicVideoPlayer.YT;
+using SongCore.Utilities;
 
 namespace MusicVideoPlayer.UI
 {

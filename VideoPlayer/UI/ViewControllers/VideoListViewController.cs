@@ -95,7 +95,7 @@ namespace MusicVideoPlayer.UI.ViewControllers
             if (_customListTableView != null)
             {
                 _customListTableView.ReloadData();
-                _customListTableView.ScrollToCellWithIdx(0, TableView.ScrollPositionType.Center, false);
+                _customListTableView.ScrollToCellWithIdx(0, TableViewScroller.ScrollPositionType.Center, false);
                 _lastSelectedRow = -1;
             }
         }
@@ -120,7 +120,7 @@ namespace MusicVideoPlayer.UI.ViewControllers
             return resultsList.Count;
         }
 
-        public override TableCell CellForIdx(int row)
+        public TableCell CellForIdx(int row)
         {
             LevelListTableCell _tableCell = GetTableCell(false);
             

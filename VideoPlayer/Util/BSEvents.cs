@@ -151,7 +151,7 @@ namespace MusicVideoPlayer.Util
             scoreController.multiplierDidChangeEvent += delegate (int multiplier, float progress) { InvokeAll(multiplierDidChange, multiplier, progress); if (multiplier > 1 && progress < 0.1f) InvokeAll(multiplierDidIncrease, multiplier); };
             scoreController.comboDidChangeEvent += delegate (int combo) { InvokeAll(comboDidChange, combo); };
             scoreController.comboBreakingEventHappenedEvent += delegate () { InvokeAll(comboDidBreak); };
-            scoreController.scoreDidChangeEvent += delegate (int score) { InvokeAll(scoreDidChange); };
+            scoreController.scoreDidChangeEvent += delegate (int score, int multiplier) { InvokeAll(scoreDidChange); };
 
             var saberCollisionManager = Resources.FindObjectsOfTypeAll<ObstacleSaberSparkleEffectManager>().FirstOrDefault();
             saberCollisionManager.sparkleEffectDidStartEvent += delegate (Saber.SaberType saber) { InvokeAll(sabersStartCollide, saber); };
@@ -167,21 +167,31 @@ namespace MusicVideoPlayer.Util
             var transitionSetup = Resources.FindObjectsOfTypeAll<StandardLevelScenesTransitionSetupDataSO>().FirstOrDefault();
             transitionSetup.didFinishEvent += delegate (StandardLevelScenesTransitionSetupDataSO data, LevelCompletionResults results)
             {
-                switch (results.levelEndStateType)
+                if(results.levelEndAction != LevelCompletionResults.LevelEndAction.None)
                 {
-                    case LevelCompletionResults.LevelEndStateType.Cleared:
-                        InvokeAll(levelCleared, data, results);
-                        break;
-                    case LevelCompletionResults.LevelEndStateType.Failed:
-                        InvokeAll(levelFailed, data, results);
-                        break;
-                    case LevelCompletionResults.LevelEndStateType.Quit:
-                        InvokeAll(levelQuit, data, results);
-                        break;
-                    case LevelCompletionResults.LevelEndStateType.Restart:
-                        InvokeAll(levelRestarted, data, results);
-                        break;
-                };
+                    switch (results.levelEndStateType)
+                    {
+                        case LevelCompletionResults.LevelEndStateType.Cleared:
+                            InvokeAll(levelCleared, data, results);
+                            break;
+                        case LevelCompletionResults.LevelEndStateType.Failed:
+                            InvokeAll(levelFailed, data, results);
+                            break;
+                    }
+                    
+                }
+                else
+                {
+                    switch (results.levelEndAction)
+                    {
+                        case LevelCompletionResults.LevelEndAction.Quit:
+                            InvokeAll(levelQuit, data, results);
+                            break;
+                        case LevelCompletionResults.LevelEndAction.Restart:
+                            InvokeAll(levelRestarted, data, results);
+                            break;
+                    }
+                }
             };
 
             InvokeAll(gameSceneLoaded);
