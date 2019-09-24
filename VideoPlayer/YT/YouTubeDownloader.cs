@@ -129,7 +129,7 @@ namespace MusicVideoPlayer.YT
             // Download the video via youtube-dl 
             ydl = new Process();
 
-            ydl.StartInfo.FileName = Environment.CurrentDirectory + "/Youtube-dl/youtube-dl.exe";
+            ydl.StartInfo.FileName = Environment.CurrentDirectory + "\\Youtube-dl\\youtube-dl.exe";
             ydl.StartInfo.Arguments =
                 "https://www.youtube.com" + video.URL +
                 " -f \"" + VideoQualitySetting.Format(quality) + "\"" + // Formats
@@ -245,7 +245,7 @@ namespace MusicVideoPlayer.YT
         private void UpdateYDL()
         {
             ydl = new Process();
-            ydl.StartInfo.FileName = Environment.CurrentDirectory + "/Youtube-dl/youtube-dl.exe";
+            ydl.StartInfo.FileName = Environment.CurrentDirectory + "\\Youtube-dl\\youtube-dl.exe";
             ydl.StartInfo.Arguments = "-U";
             ydl.StartInfo.RedirectStandardOutput = true;
             ydl.StartInfo.RedirectStandardError = true;

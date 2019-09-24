@@ -7,6 +7,7 @@ using MusicVideoPlayer.UI.ViewControllers;
 using VRUI;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using MusicVideoPlayer.Util;
 //using SongLoaderPlugin;
 using MusicVideoPlayer.YT;
@@ -27,7 +28,7 @@ namespace MusicVideoPlayer.UI
         private VideoDetailViewController _videoDetailViewController;
         private SimpleDialogPromptViewController _simpleDialog;
 
-        private IBeatmapLevel selectedLevel;
+        private IPreviewBeatmapLevel selectedLevel;
         private VideoData selectedLevelVideo;
         private bool previewPlaying;
 
@@ -150,7 +151,7 @@ namespace MusicVideoPlayer.UI
             {
                 // start preview
                 ScreenManager.Instance.PlayVideo();
-                songPreviewPlayer.CrossfadeTo(selectedLevel.beatmapLevelData.audioClip, 0, selectedLevel.beatmapLevelData.audioClip.length, 1f);
+                songPreviewPlayer.CrossfadeTo(selectedLevel.GetPreviewAudioClipAsync(new CancellationToken()).Result, 0, selectedLevel.previewDuration, 1f);
 
                 previewPlaying = true;
                 
@@ -308,9 +309,9 @@ namespace MusicVideoPlayer.UI
 
         public void HandleDidSelectLevel(LevelPackLevelsViewController sender, IPreviewBeatmapLevel level)
         {
-            selectedLevel = Resources.FindObjectsOfTypeAll<BeatmapLevelSO>().First(x=>x.levelID == level.levelID);
-            
-            selectedLevelVideo = VideoLoader.Instance.GetVideo(selectedLevel);
+            Plugin.logger.Info(level.levelID);
+            selectedLevel = level;
+            selectedLevelVideo = VideoLoader.Instance.GetVideo(level);
             ScreenManager.Instance.PrepareVideo(selectedLevelVideo);
         }
         

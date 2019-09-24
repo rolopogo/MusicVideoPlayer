@@ -28,7 +28,7 @@ namespace MusicVideoPlayer.UI
             }
         }
 
-        IBeatmapLevel selectedLevel;
+        IPreviewBeatmapLevel selectedLevel;
 
         private VideoFlowCoordinator _videoFlowCoordinator;
 
@@ -109,8 +109,9 @@ namespace MusicVideoPlayer.UI
 
         public void HandleDidSelectLevel(LevelPackLevelsViewController sender, IPreviewBeatmapLevel level)
         {
-            selectedLevel = Resources.FindObjectsOfTypeAll<BeatmapLevelSO>().First(x => x.levelID == level.levelID);
-            UpdateVideoButton(VideoLoader.Instance.GetVideo(selectedLevel));
+            selectedLevel = level;
+            Plugin.logger.Info(level.levelID);
+            UpdateVideoButton(VideoLoader.Instance.GetVideo(level));
         }
         
         private void UpdateVideoButton(VideoData selectedVideo)

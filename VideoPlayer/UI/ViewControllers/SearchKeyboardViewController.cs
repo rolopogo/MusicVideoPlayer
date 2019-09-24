@@ -74,7 +74,7 @@ namespace MusicVideoPlayer.UI.ViewControllers
             _inputString = "";
         }
 
-        public void SetQuickButtons(IBeatmapLevel level)
+        public void SetQuickButtons(IPreviewBeatmapLevel level)
         {
             if(_titleButton == null)
             {
