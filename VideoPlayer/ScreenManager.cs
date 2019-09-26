@@ -211,6 +211,10 @@ namespace MusicVideoPlayer
             if(!videoPlayer.isPrepared) videoPlayer.Prepare();
             vsRenderer.material.color = Color.clear;
             videoPlayer.Pause();
+            for (ushort i = 0; i < videoPlayer.audioTrackCount; i++)
+            {
+                videoPlayer.EnableAudioTrack(i, false); //Mute Audio
+            }
         }
 
         public void PlayVideo()
