@@ -57,7 +57,7 @@ namespace MusicVideoPlayer.UI.ViewControllers
 
         public void Init()
         {
-            // Buttons
+//            Buttons
             Plugin.logger.Info("Init");
             _backButton = BeatSaberUI.CreateBackButton(rectTransform as RectTransform, delegate () { backButtonPressed?.Invoke(); });
             Plugin.logger.Info("back");
