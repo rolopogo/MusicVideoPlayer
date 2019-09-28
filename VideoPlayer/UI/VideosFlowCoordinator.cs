@@ -74,6 +74,7 @@ namespace MusicVideoPlayer.UI
                 _videoListViewController.backButtonPressed += ListViewBackPressed;
                 _videoListViewController.downloadButtonPressed += ListViewDownloadPressed;
                 _videoListViewController.searchButtonPressed += ListViewSearchPressed;
+                Plugin.logger.Info("vLVC Made");
             }
             Plugin.logger.Info("Made _videoListViewController y");
             if (_simpleDialog == null)
@@ -103,6 +104,7 @@ namespace MusicVideoPlayer.UI
 
         private void DetailViewDownloadDeletePressed()
         {
+            Plugin.logger.Info("Downloaded-Delete");
             switch (selectedLevelVideo.downloadState) { 
                 case DownloadState.Downloaded:
                     VideoLoader.Instance.DeleteVideo(selectedLevelVideo);
@@ -128,12 +130,17 @@ namespace MusicVideoPlayer.UI
 
         private void DoSearch(string query)
         {
+            Plugin.logger.Info("Do Search");
             _videoListViewController.SetLoadingState(true);
             _videoListViewController.SetContent(new List<YTResult>());
+            Plugin.logger.Info("Doing Search");
 
             YouTubeSearcher.Search(query, selectedLevel, delegate () {
+                Plugin.logger.Info("YT Search done");
                 _videoListViewController.SetContent(YouTubeSearcher.searchResults);
+                Plugin.logger.Info("YT Set Content");
                 _videoListViewController.SetLoadingState(false);
+                Plugin.logger.Info("Set Loading State");
             });
         }
 
@@ -149,14 +156,19 @@ namespace MusicVideoPlayer.UI
 
         private void DetailViewSearchPressed()
         {
+            Plugin.logger.Info("DVSP");
             PresentViewController(_videoListViewController);
+            Plugin.logger.Info("PVC Complete");
 
             DoSearch(selectedLevel.songName + " " + selectedLevel.songAuthorName);
+            Plugin.logger.Info("Did Search");
             StopPreview();
+            Plugin.logger.Info("Stopped Preview");
         }
 
         private void DetailViewLoopPressed()
         {
+            Plugin.logger.Info("DVLP");
             selectedLevelVideo.loop = !selectedLevelVideo.loop;
             _videoDetailViewController.UpdateContent();
         }
@@ -221,6 +233,7 @@ namespace MusicVideoPlayer.UI
         private void QueueDownload(YTResult result)
         {
             // Delete existing
+            Plugin.logger.Info("Queue Downloaded");
             if (selectedLevelVideo != null)
             {
                 VideoLoader.Instance.RemoveVideo(selectedLevelVideo);
@@ -271,9 +284,12 @@ namespace MusicVideoPlayer.UI
 
         private void ListViewSearchPressed()
         {
+            Plugin.logger.Info("List View Search Pressed");
             if (_searchViewController == null)
             {
+                Plugin.logger.Info("sVC null");
                 _searchViewController = BeatSaberUI.CreateViewController<SearchKeyboardViewController>();
+                Plugin.logger.Info("keyboard made");
                 _searchViewController.backButtonPressed += SearchViewControllerBackButtonPressed;
                 _searchViewController.searchButtonPressed += SearchViewControllerSearchButtonPressed;
             }
@@ -298,6 +314,7 @@ namespace MusicVideoPlayer.UI
         
         public void VideoDownloaderDownloadProgress(VideoData video)
         {
+            Plugin.logger.Info("VDDP");
             if (selectedLevelVideo == video)
             {
                 _videoDetailViewController.UpdateContent();

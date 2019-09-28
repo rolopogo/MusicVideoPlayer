@@ -49,6 +49,7 @@ namespace MusicVideoPlayer.UI.ViewControllers
 
         protected override void DidActivate(bool firstActivation, ActivationType type)
         {
+            Plugin.logger.Info("Did Activate");
             if (type == ActivationType.AddedToHierarchy)
             {
                 UpdateContent();
@@ -114,6 +115,8 @@ namespace MusicVideoPlayer.UI.ViewControllers
 
             BeatSaberUI.AddHintText(_addOffset.transform as RectTransform, "Video is behind music\nStart the video earlier");
             BeatSaberUI.AddHintText(_subOffset.transform as RectTransform, "Video is ahead of music\nStart the video later");
+            _addOffset.interactable = true;
+            _subOffset.interactable = true;
 
             _offsetText = BeatSaberUI.CreateText(rectTransform, "?", new Vector2(60, -10));
             _offsetText.rectTransform.sizeDelta = new Vector2(14, 8);
@@ -174,9 +177,9 @@ namespace MusicVideoPlayer.UI.ViewControllers
             (_progressButton.transform as RectTransform).anchoredPosition = new Vector2(0, 0);
             (_progressButton.transform as RectTransform).pivot = new Vector2(0.5f, 0.5f);
             (_progressButton.transform as RectTransform).sizeDelta = new Vector2(18, 18);
-            //_progressText = _progressButton.GetComponentInChildren<TextMeshProUGUI>();
-            //_progressText.text = "100%";
-            _progressButton.SetButtonText("100%");
+            _progressText = _progressButton.GetComponentInChildren<TextMeshProUGUI>();
+            _progressText.text = "100%";
+//            _progressButton.SetButtonText("100%");
             _progressRingGlow = _progressButton.GetComponentsInChildren<Image>().First(x => x.name == "Glow");
             Destroy(_progressButton);
             _progressRingGlow.gameObject.SetActive(false);
@@ -238,9 +241,11 @@ namespace MusicVideoPlayer.UI.ViewControllers
                 _progressText.gameObject.SetActive(true);
                 _progressText.text = "N/A";
                 _hoverHint.text = "No video selected\nDownload a video";
-
+                Plugin.logger.Info("hover");
                 _addOffset.interactable = false;
+                Plugin.logger.Info("addOffset");
                 _subOffset.interactable = false;
+                Plugin.logger.Info("subOffset");
                 _previewButton.interactable = false;
                 _loopButton.interactable = false;
                 _downloadDeleteButton.interactable = false;
@@ -319,7 +324,9 @@ namespace MusicVideoPlayer.UI.ViewControllers
             {
                 Plugin.logger.Info("Downloaded");
                 _progressText.gameObject.SetActive(false);
+                Plugin.logger.Info("progtext");
                 _progressCircle.gameObject.SetActive(false);
+                Plugin.logger.Info("progcirc");
 
                 _thumbnail.color = Color.white;
                 _hoverHint.text = "Video Ready, Search again to overwrite";
@@ -329,7 +336,9 @@ namespace MusicVideoPlayer.UI.ViewControllers
                 _previewButton.interactable = true;
                 _loopButton.interactable = true;
                 _downloadDeleteButton.interactable = true;
+                Plugin.logger.Info("setitems");
                 _downloadDeleteButton.SetButtonText("Delete");
+                Plugin.logger.Info("dDBSBT");
             }
 
             else if (selectedVideo.downloadState == DownloadState.Queued)

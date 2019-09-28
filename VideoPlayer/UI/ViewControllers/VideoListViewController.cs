@@ -10,6 +10,7 @@ using CustomUI.BeatSaber;
 using CustomUI.Utilities;
 using MusicVideoPlayer.Util;
 using MusicVideoPlayer.YT;
+using HtmlAgilityPack;
 
 namespace MusicVideoPlayer.UI.ViewControllers
 {
@@ -49,7 +50,7 @@ namespace MusicVideoPlayer.UI.ViewControllers
                 {
                     downloadButtonPressed?.Invoke(resultsList[_lastSelectedRow]);
                 }, "Download");
-                _downloadButton.GetComponentInChildren<HorizontalLayoutGroup>().padding = new RectOffset(0, 0, 0, 0);
+//                _downloadButton.GetComponentInChildren<HorizontalLayoutGroup>().padding = new RectOffset(0, 0, 0, 0);
                                 
                 _loadingIndicator = BeatSaberUI.CreateLoadingSpinner(rectTransform);
                 (_loadingIndicator.transform as RectTransform).anchorMin = new Vector2(0.5f, 0.5f);
@@ -87,17 +88,33 @@ namespace MusicVideoPlayer.UI.ViewControllers
         
         public void SetContent(List<YTResult> videos)
         {
-            if(videos == null && resultsList != null)
+            Plugin.logger.Info("SetContent");
+            if (videos == null && resultsList != null)
+            {
+                Plugin.logger.Info("Clearing");
                 resultsList.Clear();
+                Plugin.logger.Info("Cleared");
+            }
             else
+            {
+                Plugin.logger.Info("new results");
                 resultsList = new List<YTResult>(videos);
+                Plugin.logger.Info("results made");
+            }
 
             if (_customListTableView != null)
             {
+                Plugin.logger.Info("not null");
+                Plugin.logger.Info(_customListTableView.numberOfCells.ToString());
+                Plugin.logger.Info(_customListTableView.ToString());
                 _customListTableView.ReloadData();
+                Plugin.logger.Info("reloaded");
                 _customListTableView.ScrollToCellWithIdx(0, TableViewScroller.ScrollPositionType.Center, false);
+                Plugin.logger.Info("reloaded");
                 _lastSelectedRow = -1;
+                Plugin.logger.Info("-1");
             }
+            Plugin.logger.Info("passed Set Content");
         }
 
         public void SetLoadingState(bool isLoading)
@@ -120,25 +137,35 @@ namespace MusicVideoPlayer.UI.ViewControllers
             return resultsList.Count;
         }
 
-        public TableCell CellForIdx(int row)
+        public override TableCell CellForIdx(TableView tableView, int row)
         {
+            Plugin.logger.Info($"Row:{row}");
             LevelListTableCell _tableCell = GetTableCell(false);
+            Plugin.logger.Info("gotTableCell");
             
             // fix aspect ratios
             (_tableCell.transform.Find("CoverImage") as RectTransform).sizeDelta = new Vector2(160f / 9f, 10);
+            Plugin.logger.Info("coverimage");
             (_tableCell.transform.Find("CoverImage") as RectTransform).anchoredPosition += new Vector2(160f / 9f / 2f, 0f);
-            (_tableCell.transform.Find("CoverImage") as RectTransform).GetComponent<UnityEngine.UI.Image>().preserveAspect = true;
+            Plugin.logger.Info("anchored");
+//            (_tableCell.transform.Find("CoverImage") as RectTransform).GetComponent<UnityEngine.UI.Image>().preserveAspect = true;
+//            (_tableCell.transform.Find("CoverImage") as RectTransform).preserveAspect = true;
+//            Plugin.logger.Info("preserve");
 
             (_tableCell.transform.Find("SongName") as RectTransform).anchoredPosition += new Vector2(160f / 9f, 0f);
+            Plugin.logger.Info("song name anchored");
             (_tableCell.transform.Find("Author") as RectTransform).anchoredPosition += new Vector2(160f / 9f, 0f);
+            Plugin.logger.Info("fixed aspect ratios");
 
             // Fill in data
             _tableCell.GetPrivateField<TextMeshProUGUI>("_songNameText").text = string.Format("{0}\n<size=80%>{1}</size>", resultsList[row].title, resultsList[row].author);
             _tableCell.GetPrivateField<TextMeshProUGUI>("_songNameText").color = Color.white;
             _tableCell.GetPrivateField<TextMeshProUGUI>("_authorText").text = "[" + resultsList[row].duration + "]" + resultsList[row].description;
             _tableCell.GetPrivateField<TextMeshProUGUI>("_authorText").color = Color.white;
+            Plugin.logger.Info("Loading Sprites");
             StartCoroutine(LoadScripts.LoadSprite(resultsList[row].thumbnailURL, _tableCell.transform.Find("CoverImage").GetComponent<UnityEngine.UI.Image>(), 16f/9f));
             _tableCell.reuseIdentifier = "VideosTableCell";
+            Plugin.logger.Info("filled data");
 
             return _tableCell;
         }
