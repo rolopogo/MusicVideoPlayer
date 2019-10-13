@@ -1,5 +1,6 @@
 ﻿using HMUI;
 using Image = UnityEngine.UI.Image;
+using RawImage = UnityEngine.UI.RawImage;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -41,6 +42,55 @@ namespace MusicVideoPlayer.Util
                 Plugin.logger.Info("added");
                 image.sprite = newSprite;
             }
+        }
+
+        static public IEnumerator LoadSprite(string spritePath, RawImage image, float aspectRatio)
+        {
+            Texture2D tex;
+            Plugin.logger.Info("tex");
+
+            if (_cachedSprites.ContainsKey(spritePath))
+            {
+                Plugin.logger.Info("spritepath");
+                image.texture = textureFromSprite(_cachedSprites[spritePath]);
+                Plugin.logger.Info("set sprite 4");
+                yield break;
+            }
+
+            using (WWW www = new WWW(spritePath))
+            {
+                yield return www;
+                tex = www.texture;
+                Plugin.logger.Info("tex3");
+
+                float newHeight = tex.width / aspectRatio;
+                Plugin.logger.Info("height");
+                float bottom = (tex.height - newHeight) / 2;
+                Plugin.logger.Info("botto");
+
+                var newSprite = Sprite.Create(tex, new Rect(0, bottom, tex.width, newHeight), Vector2.one * 0.5f, 100, 1);
+                Plugin.logger.Info("newsprite");
+                _cachedSprites.Add(spritePath, newSprite);
+                Plugin.logger.Info("added");
+                image.texture = textureFromSprite(newSprite);
+            }
+        }
+
+        public static Texture2D textureFromSprite(Sprite sprite)
+        {
+            if (sprite.rect.width != sprite.texture.width)
+            {
+                Texture2D newText = new Texture2D((int)sprite.rect.width, (int)sprite.rect.height);
+                Color[] newColors = sprite.texture.GetPixels((int)sprite.textureRect.x,
+                                                             (int)sprite.textureRect.y,
+                                                             (int)sprite.textureRect.width,
+                                                             (int)sprite.textureRect.height);
+                newText.SetPixels(newColors);
+                newText.Apply();
+                return newText;
+            }
+            else
+                return sprite.texture;
         }
 
         static public IEnumerator LoadSprite(string spritePath, TableCell obj)

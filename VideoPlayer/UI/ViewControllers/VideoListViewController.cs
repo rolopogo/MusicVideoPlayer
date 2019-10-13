@@ -142,11 +142,13 @@ namespace MusicVideoPlayer.UI.ViewControllers
             Plugin.logger.Info($"Row:{row}");
             LevelListTableCell _tableCell = GetTableCell(false);
             Plugin.logger.Info("gotTableCell");
-            
+
+            var coverImage = _tableCell.transform.Find("CoverImage");
+
             // fix aspect ratios
-            (_tableCell.transform.Find("CoverImage") as RectTransform).sizeDelta = new Vector2(160f / 9f, 10);
+            (coverImage as RectTransform).sizeDelta = new Vector2(160f / 9f, 10);
             Plugin.logger.Info("coverimage");
-            (_tableCell.transform.Find("CoverImage") as RectTransform).anchoredPosition += new Vector2(160f / 9f / 2f, 0f);
+            (coverImage as RectTransform).anchoredPosition += new Vector2(160f / 9f / 2f, 0f);
             Plugin.logger.Info("anchored");
 //            (_tableCell.transform.Find("CoverImage") as RectTransform).GetComponent<UnityEngine.UI.Image>().preserveAspect = true;
 //            (_tableCell.transform.Find("CoverImage") as RectTransform).preserveAspect = true;
@@ -163,7 +165,9 @@ namespace MusicVideoPlayer.UI.ViewControllers
             _tableCell.GetPrivateField<TextMeshProUGUI>("_authorText").text = "[" + resultsList[row].duration + "]" + resultsList[row].description;
             _tableCell.GetPrivateField<TextMeshProUGUI>("_authorText").color = Color.white;
             Plugin.logger.Info("Loading Sprites");
-            StartCoroutine(LoadScripts.LoadSprite(resultsList[row].thumbnailURL, _tableCell.transform.Find("CoverImage").GetComponent<UnityEngine.UI.Image>(), 16f/9f));
+
+
+            StartCoroutine(LoadScripts.LoadSprite(resultsList[row].thumbnailURL, coverImage.GetComponent<UnityEngine.UI.RawImage>(), 16f/9f));
             _tableCell.reuseIdentifier = "VideosTableCell";
             Plugin.logger.Info("filled data");
 
