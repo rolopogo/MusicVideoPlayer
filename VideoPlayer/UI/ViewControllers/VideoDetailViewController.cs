@@ -93,13 +93,13 @@ namespace MusicVideoPlayer.UI.ViewControllers
 
             _addOffset = BeatSaberUI.CreateUIButton(rectTransform, "CreditsButton", new Vector2(71, -10), new Vector2(8, 8), null, "+");
 
-            foreach (StackLayoutGroup stack in _addOffset.GetComponentsInChildren<StackLayoutGroup>())
-            {
-                Plugin.logger.Info("foreach");
-                stack.childForceExpandHeight = false;
-                stack.childForceExpandWidth = false;
-                stack.padding = new RectOffset(0, 0, 0, 0);
-            }
+            //foreach (StackLayoutGroup stack in _addOffset.GetComponentsInChildren<StackLayoutGroup>())
+            //{
+            //    Plugin.logger.Info("foreach");
+            //    stack.childForceExpandHeight = false;
+            //    stack.childForceExpandWidth = false;
+            //    stack.padding = new RectOffset(0, 0, 0, 0);
+            //}
 
 //            _addOffset.GetComponentInChildren<HorizontalLayoutGroup>().padding = new RectOffset(0, 0, 0, 0);
 
