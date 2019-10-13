@@ -192,6 +192,7 @@ namespace MusicVideoPlayer.UI
 
         private void DetailViewAddOffsetPressed()
         {
+            Plugin.logger.Info("Pressed Subtract Offset");
             selectedLevelVideo.offset += 100;
             _videoDetailViewController.SetOffsetText(selectedLevelVideo.offset.ToString());
             StopPreview();

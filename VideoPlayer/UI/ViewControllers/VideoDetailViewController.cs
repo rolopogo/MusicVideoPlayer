@@ -91,15 +91,15 @@ namespace MusicVideoPlayer.UI.ViewControllers
             }, "Loop");
             Plugin.logger.Info("loop");
 
-            _addOffset = BeatSaberUI.CreateUIButton(rectTransform, "QuitButton", new Vector2(71, -10), new Vector2(8, 8), null, "+");
-            Plugin.logger.Info("offset");
-            foreach (StackLayoutGroup stack in _addOffset.GetComponentsInChildren<StackLayoutGroup>())
-            {
-                Plugin.logger.Info("foreach");
-                stack.childForceExpandHeight = false;
-                stack.childForceExpandWidth = false;
-                stack.padding = new RectOffset(0, 0, 0, 0);
-            }
+            _addOffset = BeatSaberUI.CreateUIButton(rectTransform, "CreditsButton", new Vector2(71, -10), new Vector2(8, 8), null, "+");
+
+            //foreach (StackLayoutGroup stack in _addOffset.GetComponentsInChildren<StackLayoutGroup>())
+            //{
+            //    Plugin.logger.Info("foreach");
+            //    stack.childForceExpandHeight = false;
+            //    stack.childForceExpandWidth = false;
+            //    stack.padding = new RectOffset(0, 0, 0, 0);
+            //}
 
 //            _addOffset.GetComponentInChildren<HorizontalLayoutGroup>().padding = new RectOffset(0, 0, 0, 0);
 
@@ -168,8 +168,11 @@ namespace MusicVideoPlayer.UI.ViewControllers
 
             // Download Progress ring
             var buttonsRect = Resources.FindObjectsOfTypeAll<RectTransform>().First(x => x.name == "PlayButtons");
+
+            Plugin.logger.Info("a2.5");
             var _playbutton = buttonsRect.GetComponentsInChildren<Button>().First(x => x.name == "PlayButton");
 
+            Plugin.logger.Info("a3");
             var _progressButton = Instantiate(_playbutton, _thumbnail.transform);
             _progressButton.name = "DownloadProgress";
             (_progressButton.transform as RectTransform).anchorMax = new Vector2(0.5f, 0.5f);
@@ -180,20 +183,24 @@ namespace MusicVideoPlayer.UI.ViewControllers
             _progressText = _progressButton.GetComponentInChildren<TextMeshProUGUI>();
             _progressText.text = "100%";
 //            _progressButton.SetButtonText("100%");
+            Plugin.logger.Info("a4");
+
             _progressRingGlow = _progressButton.GetComponentsInChildren<Image>().First(x => x.name == "Glow");
             Destroy(_progressButton);
             _progressRingGlow.gameObject.SetActive(false);
 
+            Plugin.logger.Info("a5");
             var hlg = _progressButton.GetComponentsInChildren<HorizontalLayoutGroup>().First(x => x.name == "Content");
             hlg.padding = new RectOffset(2, 2, 2, 2);
 
+            Plugin.logger.Info("a6");
             _progressCircle = _progressButton.GetComponentsInChildren<Image>().First(x => x.name == "Stroke");
             _progressCircle.type = Image.Type.Filled;
             _progressCircle.fillMethod = Image.FillMethod.Radial360;
             _progressCircle.fillAmount = 1f;
             
             _hoverHint = BeatSaberUI.AddHintText(_thumbnail.transform as RectTransform, "Banana banana banana");
-            Plugin.logger.Info("a3");
+            Plugin.logger.Info("a7");
         }
 
         public void SetPreviewState(bool playing)
