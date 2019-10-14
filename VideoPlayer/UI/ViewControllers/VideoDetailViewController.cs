@@ -53,7 +53,6 @@ namespace MusicVideoPlayer.UI.ViewControllers
 
         protected override void DidActivate(bool firstActivation, ActivationType type)
         {
-            Plugin.logger.Info("Did Activate");
             if (type == ActivationType.AddedToHierarchy)
             {
                 UpdateContent();
@@ -63,21 +62,16 @@ namespace MusicVideoPlayer.UI.ViewControllers
         public void Init()
         {
 //            Buttons
-            Plugin.logger.Info("Init");
             _backButton = BeatSaberUI.CreateBackButton(rectTransform as RectTransform, delegate () { backButtonPressed?.Invoke(); });
-            Plugin.logger.Info("back");
             _listButton = BeatSaberUI.CreateUIButton(rectTransform, "CreditsButton", new Vector2(60, 30), new Vector2(30, 8), () =>
             {
                 listButtonPressed?.Invoke();
             }, "Search");
-            Plugin.logger.Info("list");
 
             _downloadDeleteButton = BeatSaberUI.CreateUIButton(rectTransform, "CreditsButton", new Vector2(60, 20), new Vector2(30, 8), () =>
             {
                 downloadDeleteButtonPressed?.Invoke();
             }, "Delete");
-//            Plugin.logger.Info(_downloadDeleteButton.GetProperty("padding").ToString());
-//            _downloadDeleteButton.GetComponentInChildren<HorizontalLayoutGroup>().padding = new RectOffset(0, 0, 0, 0);
 
             _previewButton = BeatSaberUI.CreateUIButton(rectTransform, "CreditsButton", new Vector2(60, -30), new Vector2(30, 8), () =>
             {
@@ -91,18 +85,6 @@ namespace MusicVideoPlayer.UI.ViewControllers
 
             _addOffset = BeatSaberUI.CreateUIButton(rectTransform, "CreditsButton", new Vector2(71, -10), new Vector2(8, 8), null, "+");
 
-            //foreach (StackLayoutGroup stack in _addOffset.GetComponentsInChildren<StackLayoutGroup>())
-            //{
-            //    Plugin.logger.Info("foreach");
-            //    stack.childForceExpandHeight = false;
-            //    stack.childForceExpandWidth = false;
-            //    stack.padding = new RectOffset(0, 0, 0, 0);
-            //}
-
-//            _addOffset.GetComponentInChildren<HorizontalLayoutGroup>().padding = new RectOffset(0, 0, 0, 0);
-
-            
-//            _addOffset.GetComponentInChildren<TextMeshProUGUI>().margin = new Vector4(0, 0, 0, 0);
             (_addOffset.transform.Find("Wrapper") as RectTransform).sizeDelta = new Vector2(8, 8);
 
             _subOffset = Instantiate(_addOffset, rectTransform);
@@ -124,7 +106,6 @@ namespace MusicVideoPlayer.UI.ViewControllers
             var _offsetTitle = BeatSaberUI.CreateText(rectTransform, "Video Offset", new Vector2(60, -3));
             _offsetTitle.rectTransform.sizeDelta = new Vector2(30, 8);
             _offsetTitle.alignment = TextAlignmentOptions.Center;
-            Plugin.logger.Info("a1");
 
             ChangeOffsetMagnitude = BeatSaberUI.CreateUIButton(rectTransform, "CreditsButton", new Vector2(60, 5), new Vector2(32, 8), null, "offset (ms)");
             ChangeOffsetMagnitude.onClick.AddListener(() => { changeOffsetMagnitudePressed?.Invoke(); });
@@ -165,11 +146,9 @@ namespace MusicVideoPlayer.UI.ViewControllers
             _description.rectTransform.sizeDelta = new Vector2(80, 10);
             _description.enableWordWrapping = true;
             _description.maxVisibleLines = 5;
-            Plugin.logger.Info("a2");
 
             Button _playbutton = GameObject.Find("PlayButton").GetComponent<Button>();
 
-            Plugin.logger.Info("a3");
             var _progressButton = Instantiate(_playbutton, _thumbnail.transform);
             _progressButton.name = "DownloadProgress";
             (_progressButton.transform as RectTransform).anchorMax = new Vector2(0.5f, 0.5f);
@@ -179,25 +158,20 @@ namespace MusicVideoPlayer.UI.ViewControllers
             (_progressButton.transform as RectTransform).sizeDelta = new Vector2(18, 18);
             _progressText = _progressButton.GetComponentInChildren<TextMeshProUGUI>();
             _progressText.text = "100%";
-            //            _progressButton.SetButtonText("100%");
-            Plugin.logger.Info("a4");
 
             _progressRingGlow = _progressButton.GetComponentsInChildren<Image>().First(x => x.name == "Glow");
             Destroy(_progressButton);
             _progressRingGlow.gameObject.SetActive(false);
 
-            Plugin.logger.Info("a5");
             var hlg = _progressButton.GetComponentsInChildren<HorizontalLayoutGroup>().First(x => x.name == "Content");
             hlg.padding = new RectOffset(2, 2, 2, 2);
 
-            Plugin.logger.Info("a6");
             _progressCircle = _progressButton.GetComponentsInChildren<Image>().First(x => x.name == "Stroke");
             _progressCircle.type = Image.Type.Filled;
             _progressCircle.fillMethod = Image.FillMethod.Radial360;
             _progressCircle.fillAmount = 1f;
 
             _hoverHint = BeatSaberUI.AddHintText(_thumbnail.transform as RectTransform, "Banana banana banana");
-            Plugin.logger.Info("a7");
         }
 
         private IEnumerator FindPlayButton()
@@ -211,7 +185,6 @@ namespace MusicVideoPlayer.UI.ViewControllers
                 yield return null;
             }
 
-            Plugin.logger.Info("a3");
             var _progressButton = Instantiate(_playbutton, _thumbnail.transform);
             _progressButton.name = "DownloadProgress";
             (_progressButton.transform as RectTransform).anchorMax = new Vector2(0.5f, 0.5f);
@@ -221,18 +194,14 @@ namespace MusicVideoPlayer.UI.ViewControllers
             (_progressButton.transform as RectTransform).sizeDelta = new Vector2(18, 18);
             _progressText = _progressButton.GetComponentInChildren<TextMeshProUGUI>();
             _progressText.text = "100%";
-            //            _progressButton.SetButtonText("100%");
-            Plugin.logger.Info("a4");
 
             _progressRingGlow = _progressButton.GetComponentsInChildren<Image>().First(x => x.name == "Glow");
             Destroy(_progressButton);
             _progressRingGlow.gameObject.SetActive(false);
 
-            Plugin.logger.Info("a5");
             var hlg = _progressButton.GetComponentsInChildren<HorizontalLayoutGroup>().First(x => x.name == "Content");
             hlg.padding = new RectOffset(2, 2, 2, 2);
 
-            Plugin.logger.Info("a6");
             _progressCircle = _progressButton.GetComponentsInChildren<Image>().First(x => x.name == "Stroke");
             _progressCircle.type = Image.Type.Filled;
             _progressCircle.fillMethod = Image.FillMethod.Radial360;
@@ -241,16 +210,13 @@ namespace MusicVideoPlayer.UI.ViewControllers
 
         public void SetPreviewState(bool playing)
         {
-            Plugin.logger.Info("Setting");
             if (playing)
             {
                 _previewButton.SetButtonText("Stop");
-                Plugin.logger.Info("Stop");
             }
             else
             {
                 _previewButton.SetButtonText("Preview");
-                Plugin.logger.Info("Preview");
             }
         }
 
@@ -266,7 +232,6 @@ namespace MusicVideoPlayer.UI.ViewControllers
 
         public void UpdateContent()
         {
-            Plugin.logger.Info("UpdateContent");
             if (selectedVideo == null)
             {
                 _title.SetText("<No Video Selected>");
@@ -284,11 +249,8 @@ namespace MusicVideoPlayer.UI.ViewControllers
                 _progressText.gameObject.SetActive(true);
                 _progressText.text = "N/A";
                 _hoverHint.text = "No video selected\nDownload a video";
-                Plugin.logger.Info("hover");
                 _addOffset.interactable = false;
-                Plugin.logger.Info("addOffset");
                 _subOffset.interactable = false;
-                Plugin.logger.Info("subOffset");
                 _previewButton.interactable = false;
                 _loopButton.interactable = false;
                 _downloadDeleteButton.interactable = false;
@@ -297,19 +259,15 @@ namespace MusicVideoPlayer.UI.ViewControllers
             }
 
             _title.SetText(selectedVideo.title.CleanASCII());
-            Plugin.logger.Info("Title Set");
             _description.SetText(selectedVideo.description);
             _uploader.SetText(selectedVideo.author);
             _duration.SetText($"[{selectedVideo.duration}]");
             SetOffsetText(selectedVideo.offset.ToString());
             _loopButton.SetButtonText(selectedVideo.loop ? "Loop" : "Once");
-            Plugin.logger.Info("Button Text Set");
             StartCoroutine(LoadScripts.LoadSprite(selectedVideo.thumbnailURL, _thumbnail, 16f / 9f));
-            Plugin.logger.Info("Started Coroutine");
 
             if (selectedVideo.downloadState == DownloadState.NotDownloaded)
             {
-                Plugin.logger.Info("Not Downloaded");
                 _progressText.gameObject.SetActive(false);
                 _progressCircle.gameObject.SetActive(false);
 
@@ -326,7 +284,6 @@ namespace MusicVideoPlayer.UI.ViewControllers
 
             else if (selectedVideo.downloadState == DownloadState.Cancelled)
             {
-                Plugin.logger.Info("Cancelled");
                 _progressText.gameObject.SetActive(false);
                 _progressCircle.gameObject.SetActive(false);
 
@@ -343,7 +300,6 @@ namespace MusicVideoPlayer.UI.ViewControllers
 
             else if (selectedVideo.downloadState == DownloadState.Downloading)
             {
-                Plugin.logger.Info("Downloading");
                 _progressText.gameObject.SetActive(true);
                 _progressCircle.gameObject.SetActive(true);
                 _progressText.text = String.Format("{0:#.0}%", selectedVideo.downloadProgress * 100);
@@ -365,11 +321,8 @@ namespace MusicVideoPlayer.UI.ViewControllers
 
             else if (selectedVideo.downloadState == DownloadState.Downloaded)
             {
-                Plugin.logger.Info("Downloaded");
                 _progressText.gameObject.SetActive(false);
-                Plugin.logger.Info("progtext");
                 _progressCircle.gameObject.SetActive(false);
-                Plugin.logger.Info("progcirc");
 
                 _thumbnail.color = Color.white;
                 _hoverHint.text = "Video Ready, Search again to overwrite";
@@ -379,14 +332,11 @@ namespace MusicVideoPlayer.UI.ViewControllers
                 _previewButton.interactable = true;
                 _loopButton.interactable = true;
                 _downloadDeleteButton.interactable = true;
-                Plugin.logger.Info("setitems");
                 _downloadDeleteButton.SetButtonText("Delete");
-                Plugin.logger.Info("dDBSBT");
             }
 
             else if (selectedVideo.downloadState == DownloadState.Queued)
             {
-                Plugin.logger.Info("Queued");
                 _progressText.gameObject.SetActive(true);
                 _progressText.text = "Pending";
                 _progressCircle.gameObject.SetActive(true);

@@ -19,13 +19,11 @@ namespace MusicVideoPlayer.YT
         {
             searchInProgress = true;
             searchResults = new List<YTResult>();
-            Plugin.logger.Info("SYC");
 
             // get youtube results
             string url = "https://www.youtube.com/results?search_query=" + search;
             WWW www = new WWW(url);
             yield return www;
-            Plugin.logger.Info("got url");
 
             if (www.error != null)
             {
@@ -39,7 +37,7 @@ namespace MusicVideoPlayer.YT
             doc.Load(stream, System.Text.Encoding.UTF8);
 
             var videoNodes = doc.DocumentNode.SelectNodes("//*[contains(concat(' ', @class, ' '),'yt-lockup-video')]");
-            Plugin.logger.Info("Nodes Selected");
+
             if (videoNodes == null)
             {
                 Plugin.logger.Info("[MVP] Search: No results found matching: " + search);
@@ -48,7 +46,6 @@ namespace MusicVideoPlayer.YT
             {
                 for (int i = 0; i < Math.Min(MaxResults, videoNodes.Count); i++)
                 {
-                    Plugin.logger.Info("For each: " + i);
                     var node = HtmlNode.CreateNode(videoNodes[i].InnerHtml);
                     YTResult data = new YTResult();
                     
@@ -59,7 +56,6 @@ namespace MusicVideoPlayer.YT
                         continue;
                     }
                     data.title = HttpUtility.HtmlDecode(titleNode.InnerText).CleanASCII();
-                    Plugin.logger.Info("title");
                     
                     // description
                     var descNode = node.SelectSingleNode("//*[contains(concat(' ', @class, ' '),'yt-lockup-description')]");
@@ -68,7 +64,6 @@ namespace MusicVideoPlayer.YT
                         continue;
                     }
                     data.description = HttpUtility.HtmlDecode(descNode.InnerText).CleanASCII();
-                    Plugin.logger.Info("desc: " + data.description);
                     
                     // duration
                     var durationNode = node.SelectSingleNode("//*[contains(concat(' ', @class, ' '),'video-time')]");
@@ -78,7 +73,6 @@ namespace MusicVideoPlayer.YT
                         continue;
                     }
                     data.duration = HttpUtility.HtmlDecode(durationNode.InnerText);
-                    Plugin.logger.Info("dur");
                     
                     // author node
                     var authorNode = node.SelectSingleNode("//*[contains(concat(' ', @class, ' '),'yt-lockup-byline')]");
@@ -87,7 +81,6 @@ namespace MusicVideoPlayer.YT
                         continue;
                     }
                     data.author = HttpUtility.HtmlDecode(authorNode.InnerText).CleanASCII();
-                    Plugin.logger.Info("author: "+ data.author);
                     
                     // url
                     var urlNode = node.SelectSingleNode("//*[contains(concat(' ', @class, ' '),'yt-uix-tile-link')]");
@@ -96,7 +89,6 @@ namespace MusicVideoPlayer.YT
                         continue;
                     }
                     data.URL = urlNode.Attributes["href"].Value;
-                    Plugin.logger.Info("url");
 
                     var thumbnailNode = node.SelectSingleNode("//img");
                     if (thumbnailNode == null)
@@ -111,14 +103,8 @@ namespace MusicVideoPlayer.YT
                     {
                         data.thumbnailURL = thumbnailNode.Attributes["src"].Value;
                     }
-                    Plugin.logger.Info("thumb");
                     // append data to results
                     searchResults.Add(data);
-                    Plugin.logger.Info("appended");
-                }
-                foreach (YTResult result in searchResults)
-                {
-                    Plugin.logger.Info(result.ToString());
                 }
             }
             if (callback != null) callback.Invoke();

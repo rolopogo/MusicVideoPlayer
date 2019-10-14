@@ -138,19 +138,13 @@ namespace MusicVideoPlayer.UI
 
         private void DetailViewSearchPressed()
         {
-            Plugin.logger.Info("DVSP");
             PresentViewController(_videoListViewController);
-            Plugin.logger.Info("PVC Complete");
-
             DoSearch(selectedLevel.songName + " " + selectedLevel.songAuthorName);
-            Plugin.logger.Info("Did Search");
             StopPreview();
-            Plugin.logger.Info("Stopped Preview");
         }
 
         private void DetailViewLoopPressed()
         {
-            Plugin.logger.Info("DVLP");
             selectedLevelVideo.loop = !selectedLevelVideo.loop;
             _videoDetailViewController.UpdateContent();
         }
@@ -245,7 +239,6 @@ namespace MusicVideoPlayer.UI
         private void QueueDownload(YTResult result)
         {
             // Delete existing
-            Plugin.logger.Info("Queue Downloaded");
             if (selectedLevelVideo != null)
             {
                 VideoLoader.Instance.RemoveVideo(selectedLevelVideo);
@@ -296,12 +289,9 @@ namespace MusicVideoPlayer.UI
 
         private void ListViewSearchPressed()
         {
-            Plugin.logger.Info("List View Search Pressed");
             if (_searchViewController == null)
             {
-                Plugin.logger.Info("sVC null");
                 _searchViewController = BeatSaberUI.CreateViewController<SearchKeyboardViewController>();
-                Plugin.logger.Info("keyboard made");
                 _searchViewController.backButtonPressed += SearchViewControllerBackButtonPressed;
                 _searchViewController.searchButtonPressed += SearchViewControllerSearchButtonPressed;
             }
@@ -326,7 +316,6 @@ namespace MusicVideoPlayer.UI
         
         public void VideoDownloaderDownloadProgress(VideoData video)
         {
-            Plugin.logger.Info("VDDP");
             if (selectedLevelVideo == video)
             {
                 _videoDetailViewController.UpdateContent();
@@ -357,7 +346,6 @@ namespace MusicVideoPlayer.UI
 
         public void HandleDidSelectLevel(LevelPackLevelsViewController sender, IPreviewBeatmapLevel level)
         {
-            Plugin.logger.Info(level.levelID);
             selectedLevel = level;
             selectedLevelVideo = VideoLoader.Instance.GetVideo(level);
             ScreenManager.Instance.PrepareVideo(selectedLevelVideo);

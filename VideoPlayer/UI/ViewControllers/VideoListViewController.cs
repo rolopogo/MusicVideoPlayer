@@ -88,33 +88,21 @@ namespace MusicVideoPlayer.UI.ViewControllers
         
         public void SetContent(List<YTResult> videos)
         {
-            Plugin.logger.Info("SetContent");
             if (videos == null && resultsList != null)
             {
-                Plugin.logger.Info("Clearing");
                 resultsList.Clear();
-                Plugin.logger.Info("Cleared");
             }
             else
             {
-                Plugin.logger.Info("new results");
                 resultsList = new List<YTResult>(videos);
-                Plugin.logger.Info("results made");
             }
 
             if (_customListTableView != null)
             {
-                Plugin.logger.Info("not null");
-                Plugin.logger.Info(_customListTableView.numberOfCells.ToString());
-                Plugin.logger.Info(_customListTableView.ToString());
                 _customListTableView.ReloadData();
-                Plugin.logger.Info("reloaded");
                 _customListTableView.ScrollToCellWithIdx(0, TableViewScroller.ScrollPositionType.Center, false);
-                Plugin.logger.Info("reloaded");
                 _lastSelectedRow = -1;
-                Plugin.logger.Info("-1");
             }
-            Plugin.logger.Info("passed Set Content");
         }
 
         public void SetLoadingState(bool isLoading)
