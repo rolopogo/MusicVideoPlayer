@@ -151,7 +151,7 @@
     <PostBuildEvent>copy /Y "$(TargetDir)$(TargetFileName)" "C:\Program Files (x86)\Steam\steamapps\common\Beat Saber\Plugins"
 copy /Y "C:\Users\verte200\Documents\Mods\MusicVideoPlayerUpdated\VideoPlayer\bin\Release\HtmlAgilityPack.dll" "C:\Users\verte200\Documents\Mods\MusicVideoPlayerUpdated\zipitup\Lib"
 copy /Y "C:\Users\verte200\Documents\Mods\MusicVideoPlayerUpdated\VideoPlayer\bin\Release\MusicVideoPlayer.dll" "C:\Users\verte200\Documents\Mods\MusicVideoPlayerUpdated\zipitup\Plugins"
-copy /Y "C:\Users\verte200\Documents\Mods\MusicVideoPlayerUpdated\Youtube-dl" "C:\Users\verte200\Documents\Mods\MusicVideoPlayerUpdated\zipitup"
+copy /Y "C:\Users\verte200\Documents\Mods\MusicVideoPlayerUpdated\Youtube-dl" "C:\Users\verte200\Documents\Mods\MusicVideoPlayerUpdated\zipitup\Youtube-dl"
 7z a "C:\Users\verte200\Documents\Mods\MusicVideoPlayerUpdated\zipitup.zip" "C:\Users\verte200\Documents\Mods\MusicVideoPlayerUpdated\zipitup\*"</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
