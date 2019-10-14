@@ -24,6 +24,7 @@ namespace MusicVideoPlayer.UI.ViewControllers
 
         public event Action addOffsetPressed;
         public event Action subOffsetPressed;
+        public event Action changeOffsetMagnitudePressed;
         public event Action loopButtonPressed;
 
         private Button _listButton;
@@ -40,6 +41,7 @@ namespace MusicVideoPlayer.UI.ViewControllers
         private TextMeshProUGUI _description;
         private TextMeshProUGUI _uploader;
 
+        public Button ChangeOffsetMagnitude;
         private Button _addOffset;
         private Button _subOffset;
         private TextMeshProUGUI _offsetText;
@@ -74,24 +76,18 @@ namespace MusicVideoPlayer.UI.ViewControllers
             {
                 downloadDeleteButtonPressed?.Invoke();
             }, "Delete");
-            Plugin.logger.Info("4");
-            Plugin.logger.Info("delete");
-            Plugin.logger.Info("delete");
 //            Plugin.logger.Info(_downloadDeleteButton.GetProperty("padding").ToString());
 //            _downloadDeleteButton.GetComponentInChildren<HorizontalLayoutGroup>().padding = new RectOffset(0, 0, 0, 0);
-            Plugin.logger.Info("ddb");
 
             _previewButton = BeatSaberUI.CreateUIButton(rectTransform, "CreditsButton", new Vector2(60, -30), new Vector2(30, 8), () =>
             {
                 previewButtonPressed?.Invoke();
             }, "Preview");
-            Plugin.logger.Info("preview");
 
             _loopButton = BeatSaberUI.CreateUIButton(rectTransform, "CreditsButton", new Vector2(60, -20), new Vector2(30, 8), () =>
             {
                 loopButtonPressed?.Invoke();
             }, "Loop");
-            Plugin.logger.Info("loop");
 
             _addOffset = BeatSaberUI.CreateUIButton(rectTransform, "CreditsButton", new Vector2(71, -10), new Vector2(8, 8), null, "+");
 
@@ -125,10 +121,13 @@ namespace MusicVideoPlayer.UI.ViewControllers
             _offsetText.alignment = TextAlignmentOptions.Center;
             _offsetText.color = Color.white;
 
-            var _offsetTitle = BeatSaberUI.CreateText(rectTransform, "Video Offset (ms)", new Vector2(60, -3));
+            var _offsetTitle = BeatSaberUI.CreateText(rectTransform, "Video Offset", new Vector2(60, -3));
             _offsetTitle.rectTransform.sizeDelta = new Vector2(30, 8);
             _offsetTitle.alignment = TextAlignmentOptions.Center;
             Plugin.logger.Info("a1");
+
+            ChangeOffsetMagnitude = BeatSaberUI.CreateUIButton(rectTransform, "CreditsButton", new Vector2(60, 5), new Vector2(32, 8), null, "offset (ms)");
+            ChangeOffsetMagnitude.onClick.AddListener(() => { changeOffsetMagnitudePressed?.Invoke(); });
 
             // Video data
             _thumbnail = Instantiate(Resources.FindObjectsOfTypeAll<Image>().First(x => x.name == "CoverImage"), rectTransform);
