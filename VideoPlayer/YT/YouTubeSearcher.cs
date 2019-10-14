@@ -5,6 +5,7 @@ using System.IO;
 using System.Collections;
 using System.Collections.Generic;
 using System.Web;
+using MusicVideoPlayer.Util;
 
 namespace MusicVideoPlayer.YT
 {
@@ -57,7 +58,7 @@ namespace MusicVideoPlayer.YT
                     {
                         continue;
                     }
-                    data.title = HttpUtility.HtmlDecode(titleNode.InnerText);
+                    data.title = HttpUtility.HtmlDecode(titleNode.InnerText).CleanASCII();
                     Plugin.logger.Info("title");
                     
                     // description
@@ -66,8 +67,8 @@ namespace MusicVideoPlayer.YT
                     {
                         continue;
                     }
-                    data.description = HttpUtility.HtmlDecode(descNode.InnerText);
-                    Plugin.logger.Info("desc");
+                    data.description = HttpUtility.HtmlDecode(descNode.InnerText).CleanASCII();
+                    Plugin.logger.Info("desc: " + data.description);
                     
                     // duration
                     var durationNode = node.SelectSingleNode("//*[contains(concat(' ', @class, ' '),'video-time')]");
@@ -85,8 +86,8 @@ namespace MusicVideoPlayer.YT
                     {
                         continue;
                     }
-                    data.author = HttpUtility.HtmlDecode(authorNode.InnerText);
-                    Plugin.logger.Info("author");
+                    data.author = HttpUtility.HtmlDecode(authorNode.InnerText).CleanASCII();
+                    Plugin.logger.Info("author: "+ data.author);
                     
                     // url
                     var urlNode = node.SelectSingleNode("//*[contains(concat(' ', @class, ' '),'yt-uix-tile-link')]");

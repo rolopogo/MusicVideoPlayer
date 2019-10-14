@@ -10,6 +10,8 @@ using UnityEngine;
 using CustomUI.BeatSaber;
 using MusicVideoPlayer.Util;
 using TMPro;
+using System.Collections;
+using System.Text;
 
 namespace MusicVideoPlayer.UI.ViewControllers
 {
@@ -166,11 +168,7 @@ namespace MusicVideoPlayer.UI.ViewControllers
             _description.maxVisibleLines = 5;
             Plugin.logger.Info("a2");
 
-            // Download Progress ring
-            var buttonsRect = Resources.FindObjectsOfTypeAll<RectTransform>().First(x => x.name == "PlayButtons");
-
-            Plugin.logger.Info("a2.5");
-            var _playbutton = buttonsRect.GetComponentsInChildren<Button>().First(x => x.name == "PlayButton");
+            Button _playbutton = GameObject.Find("PlayButton").GetComponent<Button>();
 
             Plugin.logger.Info("a3");
             var _progressButton = Instantiate(_playbutton, _thumbnail.transform);
@@ -182,7 +180,7 @@ namespace MusicVideoPlayer.UI.ViewControllers
             (_progressButton.transform as RectTransform).sizeDelta = new Vector2(18, 18);
             _progressText = _progressButton.GetComponentInChildren<TextMeshProUGUI>();
             _progressText.text = "100%";
-//            _progressButton.SetButtonText("100%");
+            //            _progressButton.SetButtonText("100%");
             Plugin.logger.Info("a4");
 
             _progressRingGlow = _progressButton.GetComponentsInChildren<Image>().First(x => x.name == "Glow");
@@ -198,9 +196,48 @@ namespace MusicVideoPlayer.UI.ViewControllers
             _progressCircle.type = Image.Type.Filled;
             _progressCircle.fillMethod = Image.FillMethod.Radial360;
             _progressCircle.fillAmount = 1f;
-            
+
             _hoverHint = BeatSaberUI.AddHintText(_thumbnail.transform as RectTransform, "Banana banana banana");
             Plugin.logger.Info("a7");
+        }
+
+        private IEnumerator FindPlayButton()
+        {
+            // Download Progress ring
+            Button _playbutton = null;
+
+            while(_playbutton == null)
+            {
+                _playbutton = GameObject.Find("PlayButton")?.GetComponent<Button>();
+                yield return null;
+            }
+
+            Plugin.logger.Info("a3");
+            var _progressButton = Instantiate(_playbutton, _thumbnail.transform);
+            _progressButton.name = "DownloadProgress";
+            (_progressButton.transform as RectTransform).anchorMax = new Vector2(0.5f, 0.5f);
+            (_progressButton.transform as RectTransform).anchorMin = new Vector2(0.5f, 0.5f);
+            (_progressButton.transform as RectTransform).anchoredPosition = new Vector2(0, 0);
+            (_progressButton.transform as RectTransform).pivot = new Vector2(0.5f, 0.5f);
+            (_progressButton.transform as RectTransform).sizeDelta = new Vector2(18, 18);
+            _progressText = _progressButton.GetComponentInChildren<TextMeshProUGUI>();
+            _progressText.text = "100%";
+            //            _progressButton.SetButtonText("100%");
+            Plugin.logger.Info("a4");
+
+            _progressRingGlow = _progressButton.GetComponentsInChildren<Image>().First(x => x.name == "Glow");
+            Destroy(_progressButton);
+            _progressRingGlow.gameObject.SetActive(false);
+
+            Plugin.logger.Info("a5");
+            var hlg = _progressButton.GetComponentsInChildren<HorizontalLayoutGroup>().First(x => x.name == "Content");
+            hlg.padding = new RectOffset(2, 2, 2, 2);
+
+            Plugin.logger.Info("a6");
+            _progressCircle = _progressButton.GetComponentsInChildren<Image>().First(x => x.name == "Stroke");
+            _progressCircle.type = Image.Type.Filled;
+            _progressCircle.fillMethod = Image.FillMethod.Radial360;
+            _progressCircle.fillAmount = 1f;
         }
 
         public void SetPreviewState(bool playing)
@@ -260,7 +297,7 @@ namespace MusicVideoPlayer.UI.ViewControllers
                 return;
             }
 
-            _title.SetText(selectedVideo.title);
+            _title.SetText(selectedVideo.title.CleanASCII());
             Plugin.logger.Info("Title Set");
             _description.SetText(selectedVideo.description);
             _uploader.SetText(selectedVideo.author);
