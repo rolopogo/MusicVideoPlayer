@@ -104,7 +104,6 @@ namespace MusicVideoPlayer.YT
                     yield break;
                 }
             }
-            Plugin.logger.Info("Downloading: " + video.title);
 
             StopCoroutine(Countdown(download));
 
@@ -161,7 +160,6 @@ namespace MusicVideoPlayer.YT
                         downloadProgress?.Invoke(video);
                         download.Update();
                     }
-                    Plugin.logger.Info(e.Data);
                 }
             };
 
@@ -275,7 +273,6 @@ namespace MusicVideoPlayer.YT
             ydl.Exited += (sender, e) =>
             {
                 updated = true;
-                Plugin.logger.Info("Youtube-DL update complete");
                 ydl.Dispose();
             };
         }
