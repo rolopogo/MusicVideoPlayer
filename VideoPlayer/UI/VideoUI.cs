@@ -111,7 +111,6 @@ namespace MusicVideoPlayer.UI
         {
             selectedLevel = level;
             Plugin.logger.Info(level.levelID);
-//            UpdateVideoButton(VideoLoader.Instance.GetVideo(level));
         }
         
         private void UpdateVideoButton(VideoData selectedVideo)

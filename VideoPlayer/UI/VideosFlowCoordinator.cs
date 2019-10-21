@@ -32,6 +32,7 @@ namespace MusicVideoPlayer.UI
         private IPreviewBeatmapLevel selectedLevel;
         private VideoData selectedLevelVideo;
         private bool previewPlaying;
+        private bool offsetInSeconds;
 
         public void Init()
         {
@@ -45,66 +46,52 @@ namespace MusicVideoPlayer.UI
         protected override void DidActivate(bool firstActivation, ActivationType activationType)
         {
             title = "Video - " + selectedLevel.songName;
-            Plugin.logger.Info("Did Activate 01");
+
             if (_videoDetailViewController == null)
             {
                 _videoDetailViewController = BeatSaberUI.CreateViewController<MusicVideoPlayer.UI.ViewControllers.VideoDetailViewController>();
                 _videoDetailViewController.Init();
-                Plugin.logger.Info(_videoDetailViewController.ToString());
-//                _videoDetailViewController.Init();
-                Plugin.logger.Info("Did Activate 3");
                 _videoDetailViewController.backButtonPressed += DetailViewBackPressed;
-                Plugin.logger.Info("Did Activate 4");
                 _videoDetailViewController.addOffsetPressed += DetailViewAddOffsetPressed;
-                Plugin.logger.Info("Did Activate 5");
                 _videoDetailViewController.subOffsetPressed += DetailViewSubOffsetPressed;
-                Plugin.logger.Info("Did Activate 6");
+                _videoDetailViewController.changeOffsetMagnitudePressed += DetailsViewChangeMagnitudePressed;
                 _videoDetailViewController.previewButtonPressed += DetailViewPreviewPressed;
-                Plugin.logger.Info("Did Activate 7");
                 _videoDetailViewController.loopButtonPressed += DetailViewLoopPressed;
-                Plugin.logger.Info("Did Activate 8");
                 _videoDetailViewController.listButtonPressed += DetailViewSearchPressed;
-                Plugin.logger.Info("Did Activate 9");
                 _videoDetailViewController.downloadDeleteButtonPressed += DetailViewDownloadDeletePressed;
             }
-            Plugin.logger.Info("Made _videoDetailViewController");
+
             if (_videoListViewController == null)
             {
                 _videoListViewController = BeatSaberUI.CreateViewController<VideoListViewController>();
                 _videoListViewController.backButtonPressed += ListViewBackPressed;
                 _videoListViewController.downloadButtonPressed += ListViewDownloadPressed;
                 _videoListViewController.searchButtonPressed += ListViewSearchPressed;
-                Plugin.logger.Info("vLVC Made");
             }
-            Plugin.logger.Info("Made _videoListViewController y");
+
             if (_simpleDialog == null)
             {
                 _simpleDialog = Resources.FindObjectsOfTypeAll<SimpleDialogPromptViewController>().First();
                 _simpleDialog = Instantiate(_simpleDialog.gameObject, _simpleDialog.transform.parent).GetComponent<SimpleDialogPromptViewController>();
             }
-            Plugin.logger.Info("Made _simpleDialog");
+
             if (activationType == FlowCoordinator.ActivationType.AddedToHierarchy)
             {
                 _videoDetailViewController.SetContent(selectedLevelVideo);
-                Plugin.logger.Info("Content Set");
                 previewPlaying = false;
                 _videoDetailViewController.SetPreviewState(previewPlaying);
-                Plugin.logger.Info("Preview State Set");
+
                 if (selectedLevelVideo != null)
                 {
-                    Plugin.logger.Info("Showing Screen");
                     ScreenManager.Instance.ShowScreen();
-                    Plugin.logger.Info("Showed Screen");
                 }
-                Plugin.logger.Info("activationType == FlowCoordinator.ActivationType.AddedToHierarchy");
+
                 ProvideInitialViewControllers(_videoDetailViewController, null, null);
             }
-            Plugin.logger.Info("Made activationType == FlowCoordinator.ActivationType.AddedToHierarchy");
         }
 
         private void DetailViewDownloadDeletePressed()
         {
-            Plugin.logger.Info("Downloaded-Delete");
             switch (selectedLevelVideo.downloadState) { 
                 case DownloadState.Downloaded:
                     VideoLoader.Instance.DeleteVideo(selectedLevelVideo);
@@ -130,17 +117,12 @@ namespace MusicVideoPlayer.UI
 
         private void DoSearch(string query)
         {
-            Plugin.logger.Info("Do Search");
             _videoListViewController.SetLoadingState(true);
             _videoListViewController.SetContent(new List<YTResult>());
-            Plugin.logger.Info("Doing Search");
 
             YouTubeSearcher.Search(query, selectedLevel, delegate () {
-                Plugin.logger.Info("YT Search done");
                 _videoListViewController.SetContent(YouTubeSearcher.searchResults);
-                Plugin.logger.Info("YT Set Content");
                 _videoListViewController.SetLoadingState(false);
-                Plugin.logger.Info("Set Loading State");
             });
         }
 
@@ -156,19 +138,13 @@ namespace MusicVideoPlayer.UI
 
         private void DetailViewSearchPressed()
         {
-            Plugin.logger.Info("DVSP");
             PresentViewController(_videoListViewController);
-            Plugin.logger.Info("PVC Complete");
-
             DoSearch(selectedLevel.songName + " " + selectedLevel.songAuthorName);
-            Plugin.logger.Info("Did Search");
             StopPreview();
-            Plugin.logger.Info("Stopped Preview");
         }
 
         private void DetailViewLoopPressed()
         {
-            Plugin.logger.Info("DVLP");
             selectedLevelVideo.loop = !selectedLevelVideo.loop;
             _videoDetailViewController.UpdateContent();
         }
@@ -192,17 +168,46 @@ namespace MusicVideoPlayer.UI
 
         private void DetailViewAddOffsetPressed()
         {
-            Plugin.logger.Info("Pressed Subtract Offset");
-            selectedLevelVideo.offset += 100;
+            if (offsetInSeconds)
+            {
+                selectedLevelVideo.offset += 1000;
+            }
+            else
+            {
+                selectedLevelVideo.offset += 100;
+            }
+
             _videoDetailViewController.SetOffsetText(selectedLevelVideo.offset.ToString());
             StopPreview();
         }
 
         private void DetailViewSubOffsetPressed()
         {
-            selectedLevelVideo.offset -= 100;
+            if (offsetInSeconds)
+            {
+                selectedLevelVideo.offset -= 1000;
+            }
+            else
+            {
+                selectedLevelVideo.offset -= 100;
+            }
+
             _videoDetailViewController.SetOffsetText(selectedLevelVideo.offset.ToString());
             StopPreview();
+        }
+
+        private void DetailsViewChangeMagnitudePressed()
+        {
+            if(offsetInSeconds)
+            {
+                _videoDetailViewController.ChangeOffsetMagnitude.SetButtonText("offset (ms)");
+            }
+            else
+            {
+                _videoDetailViewController.ChangeOffsetMagnitude.SetButtonText("offset (s)");
+            }
+
+            offsetInSeconds = !offsetInSeconds;
         }
 
         private void StopPreview()
@@ -234,7 +239,6 @@ namespace MusicVideoPlayer.UI
         private void QueueDownload(YTResult result)
         {
             // Delete existing
-            Plugin.logger.Info("Queue Downloaded");
             if (selectedLevelVideo != null)
             {
                 VideoLoader.Instance.RemoveVideo(selectedLevelVideo);
@@ -285,12 +289,9 @@ namespace MusicVideoPlayer.UI
 
         private void ListViewSearchPressed()
         {
-            Plugin.logger.Info("List View Search Pressed");
             if (_searchViewController == null)
             {
-                Plugin.logger.Info("sVC null");
                 _searchViewController = BeatSaberUI.CreateViewController<SearchKeyboardViewController>();
-                Plugin.logger.Info("keyboard made");
                 _searchViewController.backButtonPressed += SearchViewControllerBackButtonPressed;
                 _searchViewController.searchButtonPressed += SearchViewControllerSearchButtonPressed;
             }
@@ -315,7 +316,6 @@ namespace MusicVideoPlayer.UI
         
         public void VideoDownloaderDownloadProgress(VideoData video)
         {
-            Plugin.logger.Info("VDDP");
             if (selectedLevelVideo == video)
             {
                 _videoDetailViewController.UpdateContent();
@@ -346,7 +346,6 @@ namespace MusicVideoPlayer.UI
 
         public void HandleDidSelectLevel(LevelPackLevelsViewController sender, IPreviewBeatmapLevel level)
         {
-            Plugin.logger.Info(level.levelID);
             selectedLevel = level;
             selectedLevelVideo = VideoLoader.Instance.GetVideo(level);
             ScreenManager.Instance.PrepareVideo(selectedLevelVideo);
