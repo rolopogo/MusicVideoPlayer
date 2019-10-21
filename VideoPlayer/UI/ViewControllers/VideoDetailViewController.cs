@@ -149,6 +149,8 @@ namespace MusicVideoPlayer.UI.ViewControllers
 
             Button _playbutton = GameObject.Find("PlayButton").GetComponent<Button>();
 
+
+
             var _progressButton = Instantiate(_playbutton, _thumbnail.transform);
             _progressButton.name = "DownloadProgress";
             (_progressButton.transform as RectTransform).anchorMax = new Vector2(0.5f, 0.5f);
