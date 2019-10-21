@@ -51,6 +51,8 @@ namespace MusicVideoPlayer.UI.ViewControllers
 
         private TextMeshProUGUI _progressText;
 
+        private const int MAX_TITLE_LENGTH = 43;
+
         protected override void DidActivate(bool firstActivation, ActivationType type)
         {
             if (type == ActivationType.AddedToHierarchy)
@@ -140,7 +142,7 @@ namespace MusicVideoPlayer.UI.ViewControllers
             _duration.rectTransform.sizeDelta = new Vector2(80, 5);
 
             _description = BeatSaberUI.CreateText(rectTransform,
-                "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
+                "DESCRIPTION",
                 new Vector2(0, -14));
             _description.alignment = TextAlignmentOptions.TopLeft;
             _description.rectTransform.sizeDelta = new Vector2(80, 10);
@@ -172,40 +174,6 @@ namespace MusicVideoPlayer.UI.ViewControllers
             _progressCircle.fillAmount = 1f;
 
             _hoverHint = BeatSaberUI.AddHintText(_thumbnail.transform as RectTransform, "Banana banana banana");
-        }
-
-        private IEnumerator FindPlayButton()
-        {
-            // Download Progress ring
-            Button _playbutton = null;
-
-            while(_playbutton == null)
-            {
-                _playbutton = GameObject.Find("PlayButton")?.GetComponent<Button>();
-                yield return null;
-            }
-
-            var _progressButton = Instantiate(_playbutton, _thumbnail.transform);
-            _progressButton.name = "DownloadProgress";
-            (_progressButton.transform as RectTransform).anchorMax = new Vector2(0.5f, 0.5f);
-            (_progressButton.transform as RectTransform).anchorMin = new Vector2(0.5f, 0.5f);
-            (_progressButton.transform as RectTransform).anchoredPosition = new Vector2(0, 0);
-            (_progressButton.transform as RectTransform).pivot = new Vector2(0.5f, 0.5f);
-            (_progressButton.transform as RectTransform).sizeDelta = new Vector2(18, 18);
-            _progressText = _progressButton.GetComponentInChildren<TextMeshProUGUI>();
-            _progressText.text = "100%";
-
-            _progressRingGlow = _progressButton.GetComponentsInChildren<Image>().First(x => x.name == "Glow");
-            Destroy(_progressButton);
-            _progressRingGlow.gameObject.SetActive(false);
-
-            var hlg = _progressButton.GetComponentsInChildren<HorizontalLayoutGroup>().First(x => x.name == "Content");
-            hlg.padding = new RectOffset(2, 2, 2, 2);
-
-            _progressCircle = _progressButton.GetComponentsInChildren<Image>().First(x => x.name == "Stroke");
-            _progressCircle.type = Image.Type.Filled;
-            _progressCircle.fillMethod = Image.FillMethod.Radial360;
-            _progressCircle.fillAmount = 1f;
         }
 
         public void SetPreviewState(bool playing)
@@ -258,7 +226,7 @@ namespace MusicVideoPlayer.UI.ViewControllers
                 return;
             }
 
-            _title.SetText(selectedVideo.title.CleanASCII());
+            _title.SetText(selectedVideo.title.CleanASCII().ShortenTitle(MAX_TITLE_LENGTH));
             _description.SetText(selectedVideo.description);
             _uploader.SetText(selectedVideo.author);
             _duration.SetText($"[{selectedVideo.duration}]");
