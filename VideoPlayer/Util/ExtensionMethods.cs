@@ -52,5 +52,17 @@ namespace MusicVideoPlayer.Util
             }
             return sb.ToString();
         }
+
+        public static string ShortenTitle(this string s, int maxLength)
+        {
+            StringBuilder builder = new StringBuilder(s);
+
+            if(builder.Length > maxLength)
+            {
+                builder.Remove(maxLength, builder.Length - maxLength).Insert(maxLength, "...."); ;
+            }
+
+            return builder.ToString();
+        }
     }
 }

@@ -13,6 +13,7 @@ using MusicVideoPlayer.Util;
 using MusicVideoPlayer.YT;
 using SongCore.Utilities;
 using Object = System.Object;
+using System.Collections;
 
 namespace MusicVideoPlayer.UI
 {
@@ -50,15 +51,7 @@ namespace MusicVideoPlayer.UI
             if (_videoDetailViewController == null)
             {
                 _videoDetailViewController = BeatSaberUI.CreateViewController<MusicVideoPlayer.UI.ViewControllers.VideoDetailViewController>();
-                _videoDetailViewController.Init();
-                _videoDetailViewController.backButtonPressed += DetailViewBackPressed;
-                _videoDetailViewController.addOffsetPressed += DetailViewAddOffsetPressed;
-                _videoDetailViewController.subOffsetPressed += DetailViewSubOffsetPressed;
-                _videoDetailViewController.changeOffsetMagnitudePressed += DetailsViewChangeMagnitudePressed;
-                _videoDetailViewController.previewButtonPressed += DetailViewPreviewPressed;
-                _videoDetailViewController.loopButtonPressed += DetailViewLoopPressed;
-                _videoDetailViewController.listButtonPressed += DetailViewSearchPressed;
-                _videoDetailViewController.downloadDeleteButtonPressed += DetailViewDownloadDeletePressed;
+                StartCoroutine(LoadDetailView());
             }
 
             if (_videoListViewController == null)
@@ -89,6 +82,8 @@ namespace MusicVideoPlayer.UI
                 ProvideInitialViewControllers(_videoDetailViewController, null, null);
             }
         }
+
+
 
         private void DetailViewDownloadDeletePressed()
         {
@@ -127,6 +122,24 @@ namespace MusicVideoPlayer.UI
         }
 
         #region DetailView
+        private IEnumerator LoadDetailView()
+        {
+            while (GameObject.Find("PlayButton") == null)
+            {
+                yield return null;
+            }
+
+            _videoDetailViewController.Init();
+            _videoDetailViewController.backButtonPressed += DetailViewBackPressed;
+            _videoDetailViewController.addOffsetPressed += DetailViewAddOffsetPressed;
+            _videoDetailViewController.subOffsetPressed += DetailViewSubOffsetPressed;
+            _videoDetailViewController.changeOffsetMagnitudePressed += DetailsViewChangeMagnitudePressed;
+            _videoDetailViewController.previewButtonPressed += DetailViewPreviewPressed;
+            _videoDetailViewController.loopButtonPressed += DetailViewLoopPressed;
+            _videoDetailViewController.listButtonPressed += DetailViewSearchPressed;
+            _videoDetailViewController.downloadDeleteButtonPressed += DetailViewDownloadDeletePressed;
+        }
+
         private void DetailViewBackPressed()
         {
             VideoLoader.SaveVideoToDisk(selectedLevelVideo);
