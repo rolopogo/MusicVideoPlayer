@@ -91,7 +91,7 @@ namespace MusicVideoPlayer.UI.ViewControllers
             }, "Loop");
             Plugin.logger.Info("loop");
 
-            _addOffset = BeatSaberUI.CreateUIButton(rectTransform, "QuitButton", new Vector2(71, -10), new Vector2(8, 8), null, "+");
+            _addOffset = BeatSaberUI.CreateUIButton(rectTransform, "CreditsButton", new Vector2(71, -10), new Vector2(8, 8), null, "+");
             Plugin.logger.Info("offset");
             foreach (StackLayoutGroup stack in _addOffset.GetComponentsInChildren<StackLayoutGroup>())
             {
