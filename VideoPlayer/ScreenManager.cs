@@ -144,18 +144,40 @@ namespace MusicVideoPlayer
             _moverPointer.Init(screen.transform);
             _moverPointer.wasMoved += ScreenWasMoved;
 
-            if (videoPlayer.time != offsetSec)
+            Plugin.logger.Info("Checking Playback Speed");
+            var levelData = BS_Utils.Plugin.LevelData;
+            float practiceOffset = 0;
+            if (levelData.GameplayCoreSceneSetupData.practiceSettings != null)
+            {
+                Plugin.logger.Info("Practice mode");
+                if (levelData.GameplayCoreSceneSetupData.practiceSettings.songSpeedMul != videoPlayer.playbackSpeed)
+                {
+                    Plugin.logger.Info("Changing Song Speed1");
+                    videoPlayer.playbackSpeed = levelData.GameplayCoreSceneSetupData.practiceSettings.songSpeedMul;
+                }
+
+                practiceOffset = levelData.GameplayCoreSceneSetupData.practiceSettings.startSongTime;
+            }
+            else if (levelData.GameplayCoreSceneSetupData.gameplayModifiers.songSpeedMul != videoPlayer.playbackSpeed)
+            {
+                Plugin.logger.Info("Song Speed Mul Changed");
+                videoPlayer.playbackSpeed = levelData.GameplayCoreSceneSetupData.gameplayModifiers.songSpeedMul;
+                Plugin.logger.Info("changed Song Speed2");
+            }
+
+            if (videoPlayer.time != offsetSec + practiceOffset)
             {
                 // game was restarted
-                if (currentVideo.offset >= 0)
+                if (currentVideo.offset + practiceOffset >= 0)
                 {
-                    videoPlayer.time = offsetSec;
+                    videoPlayer.time = offsetSec + practiceOffset;
                 }
                 else
                 {
                     videoPlayer.time = 0;
                 }
             }
+
             if(currentVideo != null)
             {
                 if(currentVideo.downloadState == DownloadState.Downloaded)

@@ -170,8 +170,9 @@ namespace MusicVideoPlayer.UI
             else
             {
                 // start preview
+                ScreenManager.Instance.videoPlayer.playbackSpeed = 1;
                 ScreenManager.Instance.PlayVideo();
-                songPreviewPlayer.CrossfadeTo(selectedLevel.GetPreviewAudioClipAsync(new CancellationToken()).Result, 0, selectedLevel.previewDuration, 1f);
+                songPreviewPlayer.CrossfadeTo(selectedLevel.GetPreviewAudioClipAsync(new CancellationToken()).Result, 0, selectedLevel.songDuration, 1f);
 
                 previewPlaying = true;
                 
