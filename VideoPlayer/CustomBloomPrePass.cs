@@ -4,11 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
-using CustomUI.Utilities;
 using UnityEngine.Rendering;
 using System.IO;
 using UnityEngine.SceneManagement;
 using MusicVideoPlayer.Util;
+using BS_Utils.Utilities;
 
 namespace MusicVideoPlayer
 {
@@ -18,7 +18,7 @@ namespace MusicVideoPlayer
 
         Material _additiveMaterial;
         BloomPrePassParams bloomPrePassParams;
-        KawaseBlurRenderer _kawaseBlurRenderer;
+        KawaseBlurRendererSO _kawaseBlurRenderer;
 
         Renderer _renderer;
         Mesh _mesh;
@@ -30,9 +30,9 @@ namespace MusicVideoPlayer
             
             _mesh = GetComponent<MeshFilter>().mesh;
             _renderer = GetComponent<Renderer>();
-            
-            BloomPrePassRenderer bppr = Resources.FindObjectsOfTypeAll<BloomPrePassRenderer>().First();
-            _kawaseBlurRenderer = bppr.GetPrivateField<KawaseBlurRenderer>("_kawaseBlurRenderer");
+
+            BloomPrePassRendererSO bppr = Resources.FindObjectsOfTypeAll<BloomPrePassRendererSO>().First();
+            _kawaseBlurRenderer = bppr.GetPrivateField<KawaseBlurRendererSO>("_kawaseBlurRenderer");
             _additiveMaterial = new Material(Shader.Find("Hidden/BlitAdd"));
             _additiveMaterial.SetFloat("_Alpha", 1f);
 
@@ -93,7 +93,7 @@ namespace MusicVideoPlayer
             GL.PopMatrix();
 
             RenderTexture blur2 = RenderTexture.GetTemporary(bloomPrePassParams.textureWidth >> bloomPrePassParams.downsample, bloomPrePassParams.textureHeight >> bloomPrePassParams.downsample, 0, RenderTextureFormat.RGB111110Float, RenderTextureReadWrite.Linear);
-            DoubleBlur(temporary, blur2, KawaseBlurRenderer.KernelSize.Kernel127, 0.07f, KawaseBlurRenderer.KernelSize.Kernel15, 0.03f, bloomPrePassParams.bloom2Alpha, bloomPrePassParams.downsample);
+            DoubleBlur(temporary, blur2, KawaseBlurRendererSO.KernelSize.Kernel127, 0.07f, KawaseBlurRendererSO.KernelSize.Kernel15, 0.03f, bloomPrePassParams.bloom2Alpha, bloomPrePassParams.downsample);
 
             Graphics.Blit(blur2, _bloomPrePassRenderTexture, _additiveMaterial);
 
@@ -136,7 +136,7 @@ namespace MusicVideoPlayer
             return result;
         }
 
-        private void DoubleBlur(RenderTexture src, RenderTexture dest, KawaseBlurRenderer.KernelSize kernelSize0, float boost0, KawaseBlurRenderer.KernelSize kernelSize1, float boost1, float secondBlurAlpha, int downsample)
+        private void DoubleBlur(RenderTexture src, RenderTexture dest, KawaseBlurRendererSO.KernelSize kernelSize0, float boost0, KawaseBlurRendererSO.KernelSize kernelSize1, float boost1, float secondBlurAlpha, int downsample)
         {
             int[] blurKernel = _kawaseBlurRenderer.GetBlurKernel(kernelSize0);
             int[] blurKernel2 = _kawaseBlurRenderer.GetBlurKernel(kernelSize1);
@@ -152,9 +152,9 @@ namespace MusicVideoPlayer
             descriptor.width = width;
             descriptor.height = height;
             RenderTexture temporary = RenderTexture.GetTemporary(descriptor);
-            _kawaseBlurRenderer.Blur(src, temporary, blurKernel, 0f, downsample, 0, num, 0f, 1f, false, KawaseBlurRenderer.WeightsType.None);
-            _kawaseBlurRenderer.Blur(temporary, dest, blurKernel, boost0, 0, num, blurKernel.Length - num, 0f, 1f, false, KawaseBlurRenderer.WeightsType.None);
-            _kawaseBlurRenderer.Blur(temporary, dest, blurKernel2, boost1, 0, num, blurKernel2.Length - num, 0f, secondBlurAlpha, true, KawaseBlurRenderer.WeightsType.None);
+            _kawaseBlurRenderer.Blur(src, temporary, blurKernel, 0f, downsample, 0, num, 0f, 1f, false, false, KawaseBlurRendererSO.WeightsType.None);
+            _kawaseBlurRenderer.Blur(temporary, dest, blurKernel, boost0, 0, num, blurKernel.Length - num, 0f, 1f, false, false, KawaseBlurRendererSO.WeightsType.None);
+            _kawaseBlurRenderer.Blur(temporary, dest, blurKernel2, boost1, 0, num, blurKernel2.Length - num, 0f, secondBlurAlpha, true, false, KawaseBlurRendererSO.WeightsType.None);
             RenderTexture.ReleaseTemporary(temporary);
         }
     }

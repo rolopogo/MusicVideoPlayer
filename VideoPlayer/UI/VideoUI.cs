@@ -1,10 +1,14 @@
-﻿using CustomUI.BeatSaber;
-using System;
+﻿using System;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 using MusicVideoPlayer.Util;
 using MusicVideoPlayer.YT;
+using BS_Utils.Utilities;
+using MusicVideoPlayer.UI.UIElements;
+using BeatSaberMarkupLanguage;
+using HMUI;
+using Image = UnityEngine.UI.Image;
 
 namespace MusicVideoPlayer.UI
 {
@@ -64,14 +68,14 @@ namespace MusicVideoPlayer.UI
 
             _videoButton = Instantiate(_practiceButton, _coverImage);
             _videoButton.name = "VideoButton";
-            _videoButton.SetButtonIcon(Base64Sprites.PlayIcon);
+            BeatSaberUI.SetButtonIcon(_videoButton, Base64Sprites.PlayIcon);
             (_videoButton.transform as RectTransform).anchoredPosition = new Vector2(0,0); 
             (_videoButton.transform as RectTransform).anchorMax = new Vector2(0.5f, 0.5f);
             (_videoButton.transform as RectTransform).anchorMin = new Vector2(0.5f, 0.5f);
             (_videoButton.transform as RectTransform).sizeDelta = new Vector2(8, 8);
             _videoButton.onClick.AddListener(delegate () { _videoFlowCoordinator.Present(); });
 
-            _videoButtonHint = BeatSaberUI.AddHintText(_videoButton.transform as RectTransform, "Download a video");
+            _videoButtonHint = CustomUIElements.AddHintText(_videoButton.transform as RectTransform, "Download a video");
 
             var glow = _playbutton.GetComponentsInChildren<RectTransform>().First(x => x.name == "GlowContainer");
             var videoWrapper = _videoButton.GetComponentsInChildren<RectTransform>().First(x => x.name == "Wrapper");
@@ -107,7 +111,7 @@ namespace MusicVideoPlayer.UI
             }
         }
 
-        public void HandleDidSelectLevel(LevelPackLevelsViewController sender, IPreviewBeatmapLevel level)
+        public void HandleDidSelectLevel(LevelCollectionViewController sender, IPreviewBeatmapLevel level)
         {
             selectedLevel = Resources.FindObjectsOfTypeAll<BeatmapLevelSO>().First(x => x.levelID == level.levelID);
             UpdateVideoButton(VideoLoader.Instance.GetVideo(selectedLevel));

@@ -2,14 +2,13 @@
 using System;
 using UnityEngine;
 using UnityEngine.UI;
-using CustomUI.BeatSaber;
 using MusicVideoPlayer.UI.ViewControllers;
-using VRUI;
 using System.Collections.Generic;
 using System.Linq;
 using MusicVideoPlayer.Util;
-using SongLoaderPlugin;
 using MusicVideoPlayer.YT;
+using BS_Utils.Utilities;
+using BeatSaberMarkupLanguage;
 
 namespace MusicVideoPlayer.UI
 {
@@ -21,7 +20,7 @@ namespace MusicVideoPlayer.UI
         private FlowCoordinator _freePlayFlowCoordinator;
         private SongPreviewPlayer songPreviewPlayer;
 
-        private SearchKeyboardViewController _searchViewController;
+        //private SearchKeyboardViewController _searchViewController;
         private VideoListViewController _videoListViewController;
         private VideoDetailViewController _videoDetailViewController;
         private SimpleDialogPromptViewController _simpleDialog;
@@ -45,6 +44,7 @@ namespace MusicVideoPlayer.UI
             
             if (_videoDetailViewController == null)
             {
+
                 _videoDetailViewController = BeatSaberUI.CreateViewController<VideoDetailViewController>();
                 _videoDetailViewController.Init();
                 _videoDetailViewController.backButtonPressed += DetailViewBackPressed;
@@ -58,7 +58,7 @@ namespace MusicVideoPlayer.UI
             if (_videoListViewController == null)
             {
                 _videoListViewController = BeatSaberUI.CreateViewController<VideoListViewController>();
-                _videoListViewController.backButtonPressed += ListViewBackPressed;
+                //_videoListViewController.backButtonPressed += ListViewBackPressed;
                 _videoListViewController.downloadButtonPressed += ListViewDownloadPressed;
                 _videoListViewController.searchButtonPressed += ListViewSearchPressed;
             }
@@ -102,7 +102,7 @@ namespace MusicVideoPlayer.UI
 
         public void Present()
         {
-            _freePlayFlowCoordinator.InvokePrivateMethod("PresentFlowCoordinator", new object[] { this, null, false, false });
+            _freePlayFlowCoordinator.InvokeMethod("PresentFlowCoordinator", new object[] { this, null, false, false });
         }
 
         private void DoSearch(string query)
@@ -121,7 +121,7 @@ namespace MusicVideoPlayer.UI
         {
             VideoLoader.SaveVideoToDisk(selectedLevelVideo);
             finished?.Invoke(selectedLevelVideo);
-            _freePlayFlowCoordinator.InvokePrivateMethod("DismissFlowCoordinator", new object[] { this, null, false });
+            _freePlayFlowCoordinator.InvokeMethod("DismissFlowCoordinator", new object[] { this, null, false });
             ScreenManager.Instance.PrepareVideo(selectedLevelVideo);
             ScreenManager.Instance.HideScreen();
         }
@@ -250,14 +250,14 @@ namespace MusicVideoPlayer.UI
 
         private void ListViewSearchPressed()
         {
-            if (_searchViewController == null)
-            {
-                _searchViewController = BeatSaberUI.CreateViewController<SearchKeyboardViewController>();
-                _searchViewController.backButtonPressed += SearchViewControllerBackButtonPressed;
-                _searchViewController.searchButtonPressed += SearchViewControllerSearchButtonPressed;
-            }
-            _searchViewController.SetQuickButtons(selectedLevel);
-            PresentViewController(_searchViewController);
+            //if (_searchViewController == null)
+            //{
+            //    //_searchViewController = BeatSaberUI.CreateViewController<SearchKeyboardViewController>();
+            //    _searchViewController.backButtonPressed += SearchViewControllerBackButtonPressed;
+            //    _searchViewController.searchButtonPressed += SearchViewControllerSearchButtonPressed;
+            //}
+            //_searchViewController.SetQuickButtons(selectedLevel);
+            //PresentViewController(_searchViewController);
             ScreenManager.Instance.HideScreen();
         }
         #endregion ListView
@@ -265,13 +265,13 @@ namespace MusicVideoPlayer.UI
         #region SearchView
         private void SearchViewControllerSearchButtonPressed(string request)
         {
-            DismissViewController(_searchViewController);
+            //DismissViewController(_searchViewController);
             DoSearch(request);
         }
 
         private void SearchViewControllerBackButtonPressed()
         {
-            DismissViewController(_searchViewController);
+            //DismissViewController(_searchViewController);
         }
         #endregion SearchView
         
@@ -305,7 +305,7 @@ namespace MusicVideoPlayer.UI
             }
         }
 
-        public void HandleDidSelectLevel(LevelPackLevelsViewController sender, IPreviewBeatmapLevel level)
+        public void HandleDidSelectLevel(LevelCollectionViewController sender, IPreviewBeatmapLevel level)
         {
             selectedLevel = Resources.FindObjectsOfTypeAll<BeatmapLevelSO>().First(x=>x.levelID == level.levelID);
             

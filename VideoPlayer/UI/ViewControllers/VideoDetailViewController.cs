@@ -1,18 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using VRUI;
 using UnityEngine.UI;
 using Image = UnityEngine.UI.Image;
 using HMUI;
 using UnityEngine;
-using CustomUI.BeatSaber;
 using MusicVideoPlayer.Util;
 using TMPro;
+using UnityEngine.Events;
+using BeatSaberMarkupLanguage;
+using BS_Utils.Utilities;
+using MusicVideoPlayer.UI.UIElements;
 
 namespace MusicVideoPlayer.UI.ViewControllers
 {
-    class VideoDetailViewController : VRUIViewController
+    class VideoDetailViewController : ViewController
     {
         public event Action listButtonPressed;
         public event Action downloadDeleteButtonPressed;
@@ -57,30 +59,30 @@ namespace MusicVideoPlayer.UI.ViewControllers
         public void Init()
         {
             // Buttons
-            _backButton = BeatSaberUI.CreateBackButton(rectTransform as RectTransform, delegate () { backButtonPressed?.Invoke(); });
+            _backButton = CustomUIElements.CreateBackButton(rectTransform as RectTransform, delegate () { backButtonPressed?.Invoke(); });
 
-            _listButton = BeatSaberUI.CreateUIButton(rectTransform, "CreditsButton", new Vector2(60, 30), new Vector2(30, 8), () =>
+            _listButton = CustomUIElements.CreateUIButton(rectTransform, "CreditsButton", new Vector2(60, 30), new Vector2(30, 8), () =>
             {
                 listButtonPressed?.Invoke();
             }, "Search");
 
-            _downloadDeleteButton = BeatSaberUI.CreateUIButton(rectTransform, "CreditsButton", new Vector2(60, 20), new Vector2(30, 8), () =>
+            _downloadDeleteButton = CustomUIElements.CreateUIButton(rectTransform, "CreditsButton", new Vector2(60, 20), new Vector2(30, 8), () =>
             {
                 downloadDeleteButtonPressed?.Invoke();
             }, "Delete");
             _downloadDeleteButton.GetComponentInChildren<HorizontalLayoutGroup>().padding = new RectOffset(0, 0, 0, 0);
 
-            _previewButton = BeatSaberUI.CreateUIButton(rectTransform, "CreditsButton", new Vector2(60, -30), new Vector2(30, 8), () =>
+            _previewButton = CustomUIElements.CreateUIButton(rectTransform, "CreditsButton", new Vector2(60, -30), new Vector2(30, 8), () =>
             {
                 previewButtonPressed?.Invoke();
             }, "Preview");
 
-            _loopButton = BeatSaberUI.CreateUIButton(rectTransform, "CreditsButton", new Vector2(60, -20), new Vector2(30, 8), () =>
+            _loopButton = CustomUIElements.CreateUIButton(rectTransform, "CreditsButton", new Vector2(60, -20), new Vector2(30, 8), () =>
             {
                 loopButtonPressed?.Invoke();
             }, "Loop");
 
-            _addOffset = BeatSaberUI.CreateUIButton(rectTransform, "QuitButton", new Vector2(71, -10), new Vector2(8, 8), null, "+");
+            _addOffset = CustomUIElements.CreateUIButton(rectTransform, "QuitButton", new Vector2(71, -10), new Vector2(8, 8), null, "+");
             foreach (StackLayoutGroup stack in _addOffset.GetComponentsInChildren<StackLayoutGroup>())
             {
                 stack.childForceExpandHeight = false;
@@ -99,8 +101,8 @@ namespace MusicVideoPlayer.UI.ViewControllers
             _subOffset.onClick.AddListener(() => { subOffsetPressed?.Invoke(); });
             _addOffset.onClick.AddListener(() => { addOffsetPressed?.Invoke(); });
 
-            BeatSaberUI.AddHintText(_addOffset.transform as RectTransform, "Video lags behind music\nStart the video earlier");
-            BeatSaberUI.AddHintText(_subOffset.transform as RectTransform, "Video is ahead of music\nStart the video later");
+            CustomUIElements.AddHintText(_addOffset.transform as RectTransform, "Video lags behind music\nStart the video earlier");
+            CustomUIElements.AddHintText(_subOffset.transform as RectTransform, "Video is ahead of music\nStart the video later");
 
             _offsetText = BeatSaberUI.CreateText(rectTransform, "?", new Vector2(60, -10));
             _offsetText.rectTransform.sizeDelta = new Vector2(14, 8);
@@ -173,7 +175,7 @@ namespace MusicVideoPlayer.UI.ViewControllers
             _progressCircle.fillMethod = Image.FillMethod.Radial360;
             _progressCircle.fillAmount = 1f;
             
-            _hoverHint = BeatSaberUI.AddHintText(_thumbnail.transform as RectTransform, "Banana banana banana");
+            _hoverHint = CustomUIElements.AddHintText(_thumbnail.transform as RectTransform, "Banana banana banana");
         }
 
         public void SetPreviewState(bool playing)

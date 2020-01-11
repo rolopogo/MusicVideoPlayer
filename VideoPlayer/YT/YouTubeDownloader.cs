@@ -54,7 +54,7 @@ namespace MusicVideoPlayer.YT
                 Instance = new GameObject("YoutubeDownloader").AddComponent<YouTubeDownloader>();
                 DontDestroyOnLoad(Instance);
                 Instance.videoQueue = new Queue<VideoDownload>();
-                Instance.quality = (VideoQuality)Plugin.config.GetInt("Settings", "VideoDownloadQuality", (int)VideoQuality.Medium, true);
+                Instance.quality = MVPSettings.instance.QualityMode;
                 Instance.downloading = false;
                 Instance.updated = false;
                 Instance.UpdateYDL();

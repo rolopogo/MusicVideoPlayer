@@ -1,4 +1,4 @@
-﻿using CustomUI.Utilities;
+﻿using BS_Utils.Utilities;
 using MusicVideoPlayer.Util;
 using System;
 using System.Collections;
@@ -26,7 +26,6 @@ namespace MusicVideoPlayer
         private GameObject screen;
         private Renderer vsRenderer;
         private Shader glowShader;
-        private MoverPointer _moverPointer;
         private CustomBloomPrePass _customBloomPrePass;
         private Color _onColor = Color.white.ColorWithAlpha(0) * 0.85f;
 
@@ -48,8 +47,8 @@ namespace MusicVideoPlayer
             }
             Instance = this;
 
-            showVideo = Plugin.config.GetBool("Settings", "showVideo", true, true);
-            placement = (VideoPlacement)Plugin.config.GetInt("Settings", "ScreenPositionMode", (int)VideoPlacement.Bottom, true);
+            showVideo = MVPSettings.instance.ShowVideoSettings;
+            placement = MVPSettings.instance.PlacementMode;
 
             BSEvents.songPaused += PauseVideo;
             BSEvents.songUnpaused += ResumeVideo;
@@ -115,16 +114,6 @@ namespace MusicVideoPlayer
         {
             var pointer = Resources.FindObjectsOfTypeAll<VRPointer>().First();
             if (pointer == null) return;
-
-            if (_moverPointer)
-            {
-                _moverPointer.wasMoved -= ScreenWasMoved;
-                Destroy(_moverPointer);
-            }
-            _moverPointer = pointer.gameObject.AddComponent<MoverPointer>();
-            _moverPointer.Init(screen.transform);
-            _moverPointer.wasMoved += ScreenWasMoved;
-
             if(currentVideo != null) PrepareVideo(currentVideo);
             PauseVideo();
             HideScreen();
@@ -134,15 +123,6 @@ namespace MusicVideoPlayer
         {
             var pointer = Resources.FindObjectsOfTypeAll<VRPointer>().Last();
             if (pointer == null) return;
-            if (_moverPointer)
-            {
-                _moverPointer.wasMoved -= ScreenWasMoved;
-                Destroy(_moverPointer);
-            }
-            _moverPointer = pointer.gameObject.AddComponent<MoverPointer>();
-            _moverPointer.Init(screen.transform);
-            _moverPointer.wasMoved += ScreenWasMoved;
-
             if (videoPlayer.time != offsetSec)
             {
                 // game was restarted
@@ -162,20 +142,6 @@ namespace MusicVideoPlayer
                     PlayVideo();
                 }
             }
-        }
-
-        private void ScreenWasMoved(Vector3 pos, Quaternion rot, float scale)
-        {
-            screen.transform.position = pos;
-            screen.transform.rotation = rot;
-            screen.transform.localScale = scale *  Vector3.one;
-
-            Plugin.config.SetString("Placement", "CustomPosition", pos.ToString());
-            Plugin.config.SetString("Placement", "CustomRotation", rot.eulerAngles.ToString());
-            Plugin.config.SetFloat("Placement", "CustomScale", scale);
-
-            placement = VideoPlacement.Custom;
-            Plugin.config.SetInt("Settings", "ScreenPositionMode", (int)placement);
         }
 
         private void VideoPlayerErrorReceived(VideoPlayer source, string message)
