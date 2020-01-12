@@ -1,14 +1,11 @@
 ﻿using IPA;
 using UnityEngine.SceneManagement;
-using UnityEngine;
-using System;
 using MusicVideoPlayer.Util;
 using MusicVideoPlayer.UI;
-using System.Linq;
-using UnityEngine.UI;
 using MusicVideoPlayer.YT;
 using BeatSaberMarkupLanguage.Settings;
 using BS_Utils.Utilities;
+using BeatSaberMarkupLanguage.GameplaySetup;
 
 namespace MusicVideoPlayer
 {
@@ -31,10 +28,12 @@ namespace MusicVideoPlayer
 
         private void OnMenuSceneLoadedFresh()
         {
+            GameplaySetup.instance.AddTab("Video", "MusicVideoPlayer.Views.videoMenu.bsml", VideoMenu.instance);
+
             YouTubeDownloader.OnLoad();
-            VideoUI.Instance.OnLoad();
             ScreenManager.OnLoad();
             VideoLoader.OnLoad();
+            VideoMenu.instance.OnLoad();
         }
 
         public void OnApplicationQuit()

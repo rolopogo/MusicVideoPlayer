@@ -17,6 +17,8 @@ namespace MusicVideoPlayer.Util
         public bool AreVideosLoaded { get; private set; }
         public bool AreVideosLoading { get; private set; }
 
+        public bool DictionaryBeingUsed { get; private set; }
+
         private Dictionary<IPreviewBeatmapLevel, VideoData> videos;
 
         private HMTask _loadingTask;
@@ -28,7 +30,6 @@ namespace MusicVideoPlayer.Util
         {
             if (Instance != null) return;
             new GameObject("VideoFetcher").AddComponent<VideoLoader>();
-            
         }
 
         private void Awake()
@@ -280,9 +281,6 @@ namespace MusicVideoPlayer.Util
             vid.level = level;
 
             var path = GetVideoPath(vid);
-            Plugin.logger.Debug("Level: " + level.songName);
-            Plugin.logger.Debug("Path: " + path);
-            Plugin.logger.Debug("JSON: " + infoText + "\n\n");
 
             if (File.Exists(GetVideoPath(vid)))
             {

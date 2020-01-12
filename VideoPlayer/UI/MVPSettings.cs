@@ -6,7 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace MusicVideoPlayer
+namespace MusicVideoPlayer.UI
 {
     public class MVPSettings : PersistentSingleton<MVPSettings>
     {

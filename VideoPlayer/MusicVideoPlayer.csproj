@@ -31,7 +31,8 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="BSML">
+    <Reference Include="BSML, Version=1.1.2.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\..\Games\Steam\steamapps\common\Beat Saber\Plugins\BSML.dll</HintPath>
     </Reference>
     <Reference Include="BS_Utils, Version=1.2.1.0, Culture=neutral, processorArchitecture=MSIL">
@@ -121,18 +122,12 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="manifest.json" />
-    <Compile Include="Views\MVPSettings.cs" />
+    <Compile Include="UI\MVPSettings.cs" />
+    <Compile Include="UI\VideoMenu\VideoMenu.cs" />
     <Compile Include="CustomBloomPrePass.cs" />
-    <Compile Include="UI\UIElements\CustomUIElements.cs" />
     <Compile Include="Util\Base64Sprites.cs" />
     <Compile Include="Util\LoadScripts.cs" />
     <Compile Include="VideoQualitySetting.cs" />
-    <Compile Include="UI\VideosFlowCoordinator.cs" />
-    <Compile Include="UI\VideoUI.cs" />
-    <Compile Include="UI\UIElements\CustomUIKeyboard.cs" />
-    <Compile Include="UI\ViewControllers\VideoDetailViewController.cs" />
-    <Compile Include="UI\ViewControllers\VideoListViewController.cs" />
-    <Compile Include="UI\ViewControllers\SearchKeyboardViewController.cs" />
     <Compile Include="VideoLoader.cs" />
     <Compile Include="Util\ExtensionMethods.cs" />
     <Compile Include="Plugin.cs" />
@@ -147,6 +142,9 @@
     <EmbeddedResource Include="Resources\mvp.bundle" />
     <None Include="packages.config" />
     <EmbeddedResource Include="Views\settings.bsml" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Views\videoMenu.bsml" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
