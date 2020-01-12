@@ -54,9 +54,6 @@
     <Reference Include="MainAssembly">
       <HintPath>..\..\..\..\Games\Steam\steamapps\common\Beat Saber\Beat Saber_Data\Managed\MainAssembly.dll</HintPath>
     </Reference>
-    <Reference Include="Oculus.VR">
-      <HintPath>..\..\..\..\Games\Steam\steamapps\common\Beat Saber\Beat Saber_Data\Managed\Oculus.VR.dll</HintPath>
-    </Reference>
     <Reference Include="SongCore">
       <HintPath>..\..\..\..\Games\Steam\steamapps\common\Beat Saber\Plugins\SongCore.dll</HintPath>
     </Reference>
@@ -149,7 +146,7 @@
   <ItemGroup>
     <EmbeddedResource Include="Resources\mvp.bundle" />
     <None Include="packages.config" />
-    <None Include="Views\settings.bsml" />
+    <EmbeddedResource Include="Views\settings.bsml" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

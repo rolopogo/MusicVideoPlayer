@@ -9,6 +9,8 @@ using MusicVideoPlayer.Util;
 using MusicVideoPlayer.YT;
 using BS_Utils.Utilities;
 using BeatSaberMarkupLanguage;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace MusicVideoPlayer.UI
 {
@@ -25,7 +27,7 @@ namespace MusicVideoPlayer.UI
         private VideoDetailViewController _videoDetailViewController;
         private SimpleDialogPromptViewController _simpleDialog;
 
-        private IBeatmapLevel selectedLevel;
+        private IPreviewBeatmapLevel selectedLevel;
         private VideoData selectedLevelVideo;
         private bool previewPlaying;
 
@@ -44,7 +46,6 @@ namespace MusicVideoPlayer.UI
             
             if (_videoDetailViewController == null)
             {
-
                 _videoDetailViewController = BeatSaberUI.CreateViewController<VideoDetailViewController>();
                 _videoDetailViewController.Init();
                 _videoDetailViewController.backButtonPressed += DetailViewBackPressed;
@@ -149,10 +150,14 @@ namespace MusicVideoPlayer.UI
             {
                 // start preview
                 ScreenManager.Instance.PlayVideo();
-                songPreviewPlayer.CrossfadeTo(selectedLevel.beatmapLevelData.audioClip, 0, selectedLevel.beatmapLevelData.audioClip.length, 1f);
-
+                var token = new CancellationToken();
+                var task = Task.Run(async () =>
+                {
+                    var clip = await selectedLevel.GetPreviewAudioClipAsync(token);
+                    songPreviewPlayer.CrossfadeTo(clip, 0, clip.length, 1f);
+                });
+                task.Wait();
                 previewPlaying = true;
-                
             }
             _videoDetailViewController.SetPreviewState(previewPlaying);
         }
@@ -307,9 +312,9 @@ namespace MusicVideoPlayer.UI
 
         public void HandleDidSelectLevel(LevelCollectionViewController sender, IPreviewBeatmapLevel level)
         {
-            selectedLevel = Resources.FindObjectsOfTypeAll<BeatmapLevelSO>().First(x=>x.levelID == level.levelID);
-            
-            selectedLevelVideo = VideoLoader.Instance.GetVideo(selectedLevel);
+            //selectedLevel = Resources.FindObjectsOfTypeAll<PreviewBeatmapLevelSO>().First(x=>x.levelID == level.levelID);
+
+            selectedLevelVideo = VideoLoader.Instance.GetVideo(level);
             ScreenManager.Instance.PrepareVideo(selectedLevelVideo);
         }
         

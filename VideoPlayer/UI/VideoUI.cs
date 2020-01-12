@@ -113,18 +113,23 @@ namespace MusicVideoPlayer.UI
 
         public void HandleDidSelectLevel(LevelCollectionViewController sender, IPreviewBeatmapLevel level)
         {
-            selectedLevel = Resources.FindObjectsOfTypeAll<BeatmapLevelSO>().First(x => x.levelID == level.levelID);
-            UpdateVideoButton(VideoLoader.Instance.GetVideo(selectedLevel));
+
+            UpdateVideoButton(VideoLoader.Instance.GetVideo(level));
         }
         
         private void UpdateVideoButton(VideoData selectedVideo)
         {
-            selectedVideo = VideoLoader.Instance.GetVideo(selectedLevel);
+            if(selectedVideo == null)
+            {
+                selectedVideo = VideoLoader.Instance.GetVideo(selectedLevel);
+            }
 
             if (selectedVideo != null)
             {
                 if (selectedVideo.downloadState == DownloadState.Queued)
                 {
+                    Plugin.logger.Debug("Video State: Queued");
+
                     // video queued
                     _videoButtonHint.text = "Queued for download";
                     _videoButtonGlow.gameObject.SetActive(true);
@@ -134,6 +139,8 @@ namespace MusicVideoPlayer.UI
                 }
                 else if (selectedVideo.downloadState == DownloadState.Downloading)
                 {
+                    Plugin.logger.Debug("Video State: Downloading");
+
                     // video downloading
                     _videoButtonHint.text = String.Format("Downloading: {0:#.0}%", selectedVideo.downloadProgress * 100);
                     _videoButtonGlow.gameObject.SetActive(false);
@@ -142,6 +149,8 @@ namespace MusicVideoPlayer.UI
                 }
                 else if (selectedVideo.downloadState == DownloadState.Downloaded)
                 {
+                    Plugin.logger.Debug("Video State: Downloaded");
+
                     // video ready
                     _videoButtonGlow.gameObject.SetActive(true);
                     _videoButtonGlow.color = Color.green;
@@ -151,6 +160,8 @@ namespace MusicVideoPlayer.UI
                 }
                 else
                 {
+                    Plugin.logger.Debug("Video State: Not Downloaded");
+
                     // notdownloaded or cancelled
                     _videoButtonGlow.gameObject.SetActive(true);
                     _videoButtonHint.text = "<color=#808080><size=80%>Video selected but not downloaded";
@@ -160,6 +171,8 @@ namespace MusicVideoPlayer.UI
             }
             else
             {
+                Plugin.logger.Debug("Video State: Not Video");
+
                 // no video
                 _videoButtonGlow.gameObject.SetActive(true);
                 _videoButtonGlow.color = Color.red;

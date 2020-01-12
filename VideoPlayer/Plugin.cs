@@ -23,7 +23,6 @@ namespace MusicVideoPlayer
 
         public void OnApplicationStart()
         {
-            logger.Debug("Loaded MVP Player");
             BSMLSettings.instance.AddSettingsMenu("MVP", "MusicVideoPlayer.Views.settings.bsml", MVPSettings.instance);
             BSEvents.OnLoad();
             BSEvents.menuSceneLoadedFresh += OnMenuSceneLoadedFresh;

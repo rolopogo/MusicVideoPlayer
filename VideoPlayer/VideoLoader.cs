@@ -53,7 +53,7 @@ namespace MusicVideoPlayer.Util
             return Path.Combine(GetLevelPath(video.level), video.videoPath);
         }
 
-        public VideoData GetVideo(IBeatmapLevel level)
+        public VideoData GetVideo(IPreviewBeatmapLevel level)
         {
             VideoData vid;
             if (videos.TryGetValue(level, out vid)) return vid;
@@ -62,10 +62,10 @@ namespace MusicVideoPlayer.Util
 
         public static string GetLevelPath(IPreviewBeatmapLevel level)
         {
-            if (level is CustomBeatmapLevel)
+            if (level is CustomPreviewBeatmapLevel)
             {
                 // Custom song
-                return (level as CustomBeatmapLevel).customLevelPath;
+                return (level as CustomPreviewBeatmapLevel).customLevelPath;
             }
             else
             {
@@ -278,6 +278,11 @@ namespace MusicVideoPlayer.Util
             }
 
             vid.level = level;
+
+            var path = GetVideoPath(vid);
+            Plugin.logger.Debug("Level: " + level.songName);
+            Plugin.logger.Debug("Path: " + path);
+            Plugin.logger.Debug("JSON: " + infoText + "\n\n");
 
             if (File.Exists(GetVideoPath(vid)))
             {

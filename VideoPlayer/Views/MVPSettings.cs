@@ -35,7 +35,7 @@ namespace MusicVideoPlayer
         [UIValue("show-video")]
         public bool ShowVideoSettings
         {
-            get => config.GetBool("General", "Show Video", false);
+            get => config.GetBool("General", "Show Video", true);
             set
             {
                 ScreenManager.showVideo = value;

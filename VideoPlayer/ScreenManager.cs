@@ -19,7 +19,7 @@ namespace MusicVideoPlayer
     {
         public static ScreenManager Instance;
 
-        public static bool showVideo = false;
+        public static bool showVideo = true;
         public VideoPlacement placement;
 
         private VideoData currentVideo;
@@ -34,6 +34,8 @@ namespace MusicVideoPlayer
 
         public static void OnLoad()
         {
+            Plugin.logger.Debug("OnLoad: ScreenManager");
+
             if (Instance == null)
                 new GameObject("VideoManager").AddComponent<ScreenManager>();
         }
@@ -45,6 +47,7 @@ namespace MusicVideoPlayer
                 Destroy(this);
                 return;
             }
+
             Instance = this;
 
             showVideo = MVPSettings.instance.ShowVideoSettings;
@@ -81,7 +84,7 @@ namespace MusicVideoPlayer
             body.transform.localPosition = new Vector3(0, 0, 0.1f);
             body.transform.localScale = new Vector3(16f / 9f + 0.1f, 1.1f, 0.1f);
             Renderer bodyRenderer = body.GetComponent<Renderer>();
-            bodyRenderer.material = new Material(Resources.FindObjectsOfTypeAll<Material>().First(x => x.name == "DarkEnvironment1")); // finding objects is wonky because platforms hides them
+            bodyRenderer.material = new Material(Resources.FindObjectsOfTypeAll<Material>().First(x => x.name == "DarkEnvironmentSimple")); // finding objects is wonky because platforms hides them
 
             GameObject videoScreen = GameObject.CreatePrimitive(PrimitiveType.Quad);
             if (videoScreen.GetComponent<Collider>() != null) Destroy(videoScreen.GetComponent<Collider>());
