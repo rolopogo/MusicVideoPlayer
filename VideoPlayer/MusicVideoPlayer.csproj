@@ -126,15 +126,14 @@
     <Compile Include="UI\VideoMenu\VideoMenu.cs" />
     <Compile Include="CustomBloomPrePass.cs" />
     <Compile Include="Util\Base64Sprites.cs" />
-    <Compile Include="Util\LoadScripts.cs" />
     <Compile Include="VideoQualitySetting.cs" />
     <Compile Include="VideoLoader.cs" />
-    <Compile Include="Util\ExtensionMethods.cs" />
     <Compile Include="Plugin.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="VideoData.cs" />
     <Compile Include="ScreenManager.cs" />
     <Compile Include="VideoPlacementSetting.cs" />
+    <Compile Include="ViewControllers\VideoDetailsViewController.cs" />
     <Compile Include="YT\YouTubeSearcher.cs" />
     <Compile Include="YT\YouTubeDownloader.cs" />
   </ItemGroup>
@@ -144,7 +143,7 @@
     <EmbeddedResource Include="Views\settings.bsml" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Views\videoMenu.bsml" />
+    <EmbeddedResource Include="Views\videoMenu.bsml" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

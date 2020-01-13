@@ -6,6 +6,7 @@ using MusicVideoPlayer.YT;
 using BeatSaberMarkupLanguage.Settings;
 using BS_Utils.Utilities;
 using BeatSaberMarkupLanguage.GameplaySetup;
+using MusicVideoPlayer.ViewControllers;
 
 namespace MusicVideoPlayer
 {
@@ -28,8 +29,6 @@ namespace MusicVideoPlayer
 
         private void OnMenuSceneLoadedFresh()
         {
-            GameplaySetup.instance.AddTab("Video", "MusicVideoPlayer.Views.videoMenu.bsml", VideoMenu.instance);
-
             YouTubeDownloader.OnLoad();
             ScreenManager.OnLoad();
             VideoLoader.OnLoad();

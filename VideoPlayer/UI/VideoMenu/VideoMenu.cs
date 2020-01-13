@@ -1,6 +1,9 @@
-﻿using BS_Utils.Utilities;
+﻿using BeatSaberMarkupLanguage.Attributes;
+using BeatSaberMarkupLanguage.GameplaySetup;
+using BS_Utils.Utilities;
 using HMUI;
 using MusicVideoPlayer.Util;
+using MusicVideoPlayer.ViewControllers;
 using MusicVideoPlayer.YT;
 using System;
 using System.Collections.Generic;
@@ -41,6 +44,7 @@ namespace MusicVideoPlayer.UI
             if(selectedVideo != null)
             {
                 ScreenManager.Instance.PrepareVideo(selectedVideo);
+                ScreenManager.Instance.HideScreen();
 
                 if (selectedVideo.downloadState == DownloadState.Queued)
                 {
@@ -72,10 +76,11 @@ namespace MusicVideoPlayer.UI
         }
         #endregion
 
+        private VideoDetailsViewController controller = new VideoDetailsViewController();
         #region Gameplay Setup View Controller
         private void OnActivate(bool firstActivation, ViewController.ActivationType activationType)
         {
-            Plugin.logger.Debug("Activated View");
+            //GameplaySetup.instance.AddTab("Video", "MusicVideoPlayer.Views.videoMenu.bsml", this);
         }
 
         #endregion
