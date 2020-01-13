@@ -63,6 +63,7 @@ namespace MusicVideoPlayer.UI
             else
             {
                 Plugin.logger.Debug("Failed to load: " + selectedLevel.songName);
+                ScreenManager.Instance.HideScreen();
             }
         }
 
