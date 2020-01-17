@@ -124,7 +124,6 @@
     <EmbeddedResource Include="manifest.json" />
     <Compile Include="UI\MVPSettings.cs" />
     <Compile Include="UI\VideoMenu\VideoMenu.cs" />
-    <Compile Include="CustomBloomPrePass.cs" />
     <Compile Include="Util\Base64Sprites.cs" />
     <Compile Include="VideoQualitySetting.cs" />
     <Compile Include="VideoLoader.cs" />
@@ -133,7 +132,6 @@
     <Compile Include="VideoData.cs" />
     <Compile Include="ScreenManager.cs" />
     <Compile Include="VideoPlacementSetting.cs" />
-    <Compile Include="ViewControllers\VideoDetailsViewController.cs" />
     <Compile Include="YT\YouTubeSearcher.cs" />
     <Compile Include="YT\YouTubeDownloader.cs" />
   </ItemGroup>
@@ -141,9 +139,10 @@
     <EmbeddedResource Include="Resources\mvp.bundle" />
     <None Include="packages.config" />
     <EmbeddedResource Include="Views\settings.bsml" />
+    <EmbeddedResource Include="Views\video-menu.bsml" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Views\videoMenu.bsml" />
+    <Folder Include="ViewControllers\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

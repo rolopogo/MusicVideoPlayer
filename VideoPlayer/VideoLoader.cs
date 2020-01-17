@@ -37,7 +37,7 @@ namespace MusicVideoPlayer.Util
             if (Instance != null) return;
             Instance = this;
 
-            SongCore.Loader.SongsLoadedEvent += RetrieveAllVideoData;
+            Loader.SongsLoadedEvent += RetrieveAllVideoData;
 
             DontDestroyOnLoad(gameObject);
         }

@@ -50,7 +50,7 @@ namespace MusicVideoPlayer.UI
             get => placementMode;
             set
             {
-                ScreenManager.Instance.placement = value;
+                ScreenManager.Instance.SetPlacement(value);
                 placementMode = value;
                 config.SetString("Positions", "Video Placement", placementMode.ToString());
             }

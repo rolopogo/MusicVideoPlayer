@@ -27,7 +27,6 @@ namespace MusicVideoPlayer
         private GameObject screen;
         private Renderer vsRenderer;
         private Shader glowShader;
-        private CustomBloomPrePass _customBloomPrePass;
         private Color _onColor = Color.white.ColorWithAlpha(0) * 0.85f;
 
         public VideoPlayer videoPlayer;
@@ -63,7 +62,7 @@ namespace MusicVideoPlayer
             DontDestroyOnLoad(gameObject);
             
             CreateScreen();
-            HideScreen();
+            //HideScreen();
         }
 
 
@@ -99,8 +98,6 @@ namespace MusicVideoPlayer
             screen.transform.position = VideoPlacementSetting.Position(placement);
             screen.transform.eulerAngles = VideoPlacementSetting.Rotation(placement);
             screen.transform.localScale = VideoPlacementSetting.Scale(placement) * Vector3.one;
-
-            _customBloomPrePass = videoScreen.AddComponent<CustomBloomPrePass>();
             
             videoPlayer = gameObject.AddComponent<VideoPlayer>();
             videoPlayer.isLooping = true;
@@ -120,7 +117,7 @@ namespace MusicVideoPlayer
             if (pointer == null) return;
             if(currentVideo != null) PrepareVideo(currentVideo);
             PauseVideo();
-            HideScreen();
+            //HideScreen();
         }
 
         private void OnGameSceneLoaded()

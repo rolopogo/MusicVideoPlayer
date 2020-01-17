@@ -1,9 +1,7 @@
 ﻿using BeatSaberMarkupLanguage.Attributes;
-using BeatSaberMarkupLanguage.GameplaySetup;
 using BS_Utils.Utilities;
 using HMUI;
 using MusicVideoPlayer.Util;
-using MusicVideoPlayer.ViewControllers;
 using MusicVideoPlayer.YT;
 using System;
 using System.Collections.Generic;
@@ -12,12 +10,13 @@ using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
 
-namespace MusicVideoPlayer.UI
+namespace MusicVideoPlayer
 {
     public class VideoMenu : PersistentSingleton<VideoMenu>
     {
         private GameplaySetupViewController gameplaySetupViewController;
         IPreviewBeatmapLevel selectedLevel;
+        VideoData selectedVideo;
 
         public void OnLoad()
         {
@@ -31,40 +30,20 @@ namespace MusicVideoPlayer.UI
             gameplaySetupViewController.didActivateEvent += OnActivate;
             YouTubeDownloader.Instance.downloadProgress += VideoDownloaderDownloadProgress;
             BSEvents.levelSelected += HandleDidSelectLevel;
+            BSEvents.gameSceneLoaded += GameSceneLoaded;
+            BSEvents.menuSceneActive += MenuSceneActive;
         }
 
-        public void LoadVideoSettings(VideoData selectedVideo)
+        public void LoadVideoSettings(VideoData videoData)
         {
             Plugin.logger.Debug("Load Video Settings");
-            if (selectedVideo == null)
+            if (videoData == null)
             {
-                selectedVideo = VideoLoader.Instance.GetVideo(selectedLevel);
+                videoData = VideoLoader.Instance.GetVideo(selectedLevel);
             }
-            
-            if(selectedVideo != null)
-            {
-                ScreenManager.Instance.PrepareVideo(selectedVideo);
-                ScreenManager.Instance.HideScreen();
 
-                if (selectedVideo.downloadState == DownloadState.Queued)
-                {
-                }
-                else if (selectedVideo.downloadState == DownloadState.Downloading)
-                {
-                }
-                else if (selectedVideo.downloadState == DownloadState.Downloaded)
-                {
-                    ScreenManager.Instance.ShowScreen();
-                }
-                else
-                {
-                }
-            }
-            else
-            {
-                Plugin.logger.Debug("Failed to load: " + selectedLevel.songName);
-                ScreenManager.Instance.HideScreen();
-            }
+            selectedVideo = videoData;
+            ScreenManager.Instance.PrepareVideo(videoData);
         }
 
         #region Youtube Downloader
@@ -77,12 +56,7 @@ namespace MusicVideoPlayer.UI
         }
         #endregion
 
-        private VideoDetailsViewController controller = new VideoDetailsViewController();
         #region Gameplay Setup View Controller
-        private void OnActivate(bool firstActivation, ViewController.ActivationType activationType)
-        {
-            //GameplaySetup.instance.AddTab("Video", "MusicVideoPlayer.Views.videoMenu.bsml", this);
-        }
 
         #endregion
 
@@ -91,6 +65,19 @@ namespace MusicVideoPlayer.UI
         {
             selectedLevel = level;
             LoadVideoSettings(null);
+        }
+
+        private void MenuSceneActive()
+        {
+            ScreenManager.Instance.ShowScreen();
+        }
+
+        private void GameSceneLoaded()
+        {
+            if (selectedVideo == null || selectedVideo.downloadState != DownloadState.Downloaded)
+            {
+                ScreenManager.Instance.HideScreen();
+            }
         }
         #endregion
     }
