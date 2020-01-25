@@ -62,7 +62,6 @@ namespace MusicVideoPlayer
             DontDestroyOnLoad(gameObject);
             
             CreateScreen();
-            //HideScreen();
         }
 
 
@@ -244,6 +243,24 @@ namespace MusicVideoPlayer
             screen.SetActive(false);
         }
         
+        public void SetScale(Vector3 scale)
+        {
+            if (Instance.screen == null) return;
+            screen.transform.localScale = scale;
+        }
+
+        public void SetPosition(Vector3 pos)
+        {
+            if (Instance.screen == null) return;
+            screen.transform.position = pos;
+        }
+
+        public void SetRotation(Vector3 rot)
+        {
+            if (Instance.screen == null) return;
+            screen.transform.eulerAngles = rot;
+        }
+
         public void SetPlacement(VideoPlacement placement)
         {
             this.placement = placement;
@@ -251,6 +268,14 @@ namespace MusicVideoPlayer
             screen.transform.position = VideoPlacementSetting.Position(placement);
             screen.transform.eulerAngles = VideoPlacementSetting.Rotation(placement);
             screen.transform.localScale = VideoPlacementSetting.Scale(placement) * Vector3.one;
+        }
+
+        public bool IsVideoPlayable()
+        {
+            if (currentVideo == null || currentVideo.downloadState != DownloadState.Downloaded)
+                return false;
+
+            return true;
         }
 
         public Shader GetShader()

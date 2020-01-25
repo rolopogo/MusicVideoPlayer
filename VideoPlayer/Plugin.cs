@@ -8,6 +8,7 @@ using BS_Utils.Utilities;
 using System.Collections;
 using UnityEngine;
 using System.Linq;
+using BeatSaberMarkupLanguage.GameplaySetup;
 
 namespace MusicVideoPlayer
 {
@@ -23,6 +24,7 @@ namespace MusicVideoPlayer
         public void OnApplicationStart()
         {
             BSMLSettings.instance.AddSettingsMenu("MVP", "MusicVideoPlayer.Views.settings.bsml", MVPSettings.instance);
+            GameplaySetup.instance.AddTab("Video", "MusicVideoPlayer.Views.video-menu.bsml", VideoMenu.instance);
             BSEvents.OnLoad();
             BSEvents.menuSceneLoadedFresh += OnMenuSceneLoadedFresh;
             Base64Sprites.ConvertToSprites();
@@ -30,7 +32,6 @@ namespace MusicVideoPlayer
 
         private void OnMenuSceneLoadedFresh()
         {
-            //GameplaySetup.instance.AddTab("Video Options", "MusicVideoPlayer.Views.video-menu.bsml", VideoMenu.instance);
             YouTubeDownloader.OnLoad();
             ScreenManager.OnLoad();
             VideoLoader.OnLoad();

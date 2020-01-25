@@ -1,8 +1,44 @@
-﻿<bg xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xsi:schemaLocation='https://monkeymanboy.github.io/BSML-Docs/ https://raw.githubusercontent.com/monkeymanboy/BSML-Docs/gh-pages/BSMLSchema.xsd'>
-  <modifier-container>
-    <modifier source='#SlowerSongIcon' text='ding' value='test' apply-on-change='true'></modifier>
-    <modifier source='#BatteryIcon' text='dong' value='test2' apply-on-change='true'></modifier>
-    <modifier source='#NoBombsIcon' text='bing' value='test3' apply-on-change='true'></modifier>
-    <modifier source='#FasterSongIcon' text='bong' value='test4' apply-on-change='true'></modifier>
-  </modifier-container>
+<bg id='root-object' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xsi:schemaLocation='https://monkeymanboy.github.io/BSML-Docs/ https://raw.githubusercontent.com/monkeymanboy/BSML-Docs/gh-pages/BSMLSchema.xsd'>
+  <bg id='video-details'>
+    <horizontal pad='5'>
+      <vertical child-control-width='false' horizontal-fit='PreferredSize' vertical-fit='PreferredSize'>
+        <vertical id='current-video-player' pref-height='27' pref-width='48' pad-left='80'></vertical>
+        <vertical pad-top='5' preferred-width='80'>
+          <text id='current-video-title' font-align='Center' font-size='4' overflow-mode='Ellipsis'></text>
+        </vertical>
+        <vertical preferred-width='80' preferred-height='20'>
+          <text id='current-video-description' word-wrapping='true' font-align='TopLeft' overflow-mode='Ellipsis' font-size='2'></text>
+        </vertical>
+      </vertical>
+      <vertical vertical-fit='PreferredSize' horizontal-fit='PreferredSize' spacing='5' pad-bottom='30'>
+        <horizontal spacing='3' horizontal-fit='PreferredSize'>
+          <button text='-' pad='0' all-uppercase='false' pref-width='5' pref-height='5'></button>
+          <text id='current-video-offset' align='Center'></text>
+          <vertical bg='round-rect-panel' pref-height='5' pref-width='5' pad-left='3' pad-right='3'>
+            <clickable-text align='Center' text='MS' font-size='3'></clickable-text>
+          </vertical>
+          <button text='+' pad='0' all-uppercase='false' pref-width='5' pref-height='5'></button>
+        </horizontal>
+        <button text='Loop' preferred-height='5' font-size='3'></button>
+      </vertical>
+    </horizontal>
+    <bottom-button-panel pad-top='3'>
+      <button text='Delete'/>
+      <button id='preview-button' text='Preview' on-click='on-preview-action'/>
+      <button id='search-button' text='Search' on-click='on-search-action'/>
+    </bottom-button-panel>
+  </bg>
+  <bg id='video-search-results'>
+    <vertical pad-bottom='8' preferred-width='100'>
+      <page-button click-event='video-list#PageUp' direction='Up' pref-width='30' pref-height='5'></page-button>
+      <list id='video-list' list-width='100' visible-cells='4'></list>
+      <page-button click-event='video-list#PageDown' direction='Down' pref-width='30' pref-height='5'></page-button>
+    </vertical>
+    <modal-keyboard on-enter='on-query' show-event='show-keyboard' hide-event='close-keyboard' move-to-center='true' click-off-closes='true'></modal-keyboard>
+    <bottom-button-panel pad-top='3'>
+      <button text='Back'/>
+      <button text='Download'/>
+      <button text='Refine' on-click='on-refine-action'/>
+    </bottom-button-panel>
+  </bg>
 </bg>

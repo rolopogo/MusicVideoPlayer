@@ -14,7 +14,7 @@ namespace MusicVideoPlayer.YT
         public static List<YTResult> searchResults;
         static bool searchInProgress = false;
 
-        static IEnumerator SearchYoutubeCoroutine(string search, IPreviewBeatmapLevel level, Action callback)
+        static IEnumerator SearchYoutubeCoroutine(string search, Action callback)
         {
             searchInProgress = true;
             searchResults = new List<YTResult>();
@@ -109,10 +109,10 @@ namespace MusicVideoPlayer.YT
             searchInProgress = false;
         }
 
-        public static void Search(string query, IPreviewBeatmapLevel level, Action callback)
+        public static void Search(string query, Action callback)
         {
             if (searchInProgress) SharedCoroutineStarter.instance.StopCoroutine("SearchYoutubeCoroutine");
-            SharedCoroutineStarter.instance.StartCoroutine(SearchYoutubeCoroutine(query, level, callback));
+            SharedCoroutineStarter.instance.StartCoroutine(SearchYoutubeCoroutine(query, callback));
         }
     }
 
