@@ -16,6 +16,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.UI;
+using Image = UnityEngine.UI.Image;
 
 namespace MusicVideoPlayer
 {
@@ -49,6 +50,42 @@ namespace MusicVideoPlayer
         [UIComponent("preview-button")]
         private TextMeshProUGUI previewButtonText;
 
+        [UIComponent("search-results-loading")]
+        private TextMeshProUGUI searchResultsLoading;
+
+        [UIComponent("looping-button")]
+        private TextMeshProUGUI LoopingButtonText;
+
+        [UIComponent("offset-magnitude")]
+        private ClickableText offsetMagnitude;
+
+        [UIComponent("offset-decrease-button")]
+        private Button OffsetDecreaseButton;
+
+        [UIComponent("offset-increase-button")]
+        private Button OffsetIncreaseButton;
+
+        [UIComponent("delete-button")]
+        private Button DeleteButton;
+
+        [UIComponent("download-button")]
+        private Button DownloadButton;
+
+        [UIComponent("refine-button")]
+        private Button RefineButton;
+
+        [UIComponent("save-button")]
+        private Button SaveButton;
+
+        [UIComponent("preview-button")]
+        private Button PreviewButton;
+
+        [UIComponent("looping-button")]
+        private Button LoopingButton;
+
+        [UIComponent("search-keyboard")]
+        private ModalKeyboard searchKeyboard;
+
         [UIParams]
         private BSMLParserParams parserParams;
 
@@ -56,7 +93,13 @@ namespace MusicVideoPlayer
 
         private bool isPreviewing = false;
 
-        private IEnumerator coroutineHandle = null;
+        private bool isOffsetInSeconds = false;
+
+        private IEnumerator updateSearchResultsCoroutine = null;
+
+        private IEnumerator videoPlayerCheckCoroutine = null;
+
+        private int selectedCell;
 
         public void OnLoad()
         {
@@ -71,8 +114,10 @@ namespace MusicVideoPlayer
             BSEvents.menuSceneActive += MenuSceneActive;
             songPreviewPlayer = Resources.FindObjectsOfTypeAll<SongPreviewPlayer>().First();
 
-            videoDetailsView.gameObject.SetActive(false);
-            videoSearchResultsView.gameObject.SetActive(true);
+            videoDetailsView.gameObject.SetActive(true);
+            videoSearchResultsView.gameObject.SetActive(false);
+
+            videoPlayerCheckCoroutine = CheckEnabled();
         }
 
         public void LoadVideoSettings(VideoData videoData)
@@ -84,13 +129,6 @@ namespace MusicVideoPlayer
                 videoData = VideoLoader.Instance.GetVideo(selectedLevel);
             }
 
-
-            if (coroutineHandle == null)
-            {
-                coroutineHandle = CheckEnabled();
-                StartCoroutine(coroutineHandle);
-            }
-
             selectedVideo = videoData;
 
             if (videoData != null)
@@ -98,15 +136,28 @@ namespace MusicVideoPlayer
                 currentVideoTitle.text = $"[{videoData.duration}] {videoData.title} by {videoData.author}";
                 currentVideoDescription.text = videoData.description;
                 currentVideoOffset.text = videoData.offset.ToString();
+                EnableButtons(true);
+                UpdateLooping();
             }
             else
             {
                 currentVideoTitle.text = "NO VIDEO SET";
-                currentVideoDescription.text = "N/A";
+                currentVideoDescription.text = "";
                 currentVideoOffset.text = "N/A";
+                EnableButtons(false);
             }
 
             ScreenManager.Instance.PrepareVideo(videoData);
+        }
+
+        private void EnableButtons(bool enable)
+        {
+            DeleteButton.interactable = enable;
+            OffsetDecreaseButton.interactable = enable;
+            OffsetIncreaseButton.interactable = enable;
+            SaveButton.interactable = enable;
+            LoopingButton.interactable = enable;
+            PreviewButton.interactable = enable;
         }
 
         private void SetPreviewState()
@@ -130,7 +181,73 @@ namespace MusicVideoPlayer
             SetPreviewState();
         }
 
-        IEnumerator UpdateSearchResults(List<YTResult> results)
+        private void ChangeView(bool searchView)
+        {
+            StopPreview();
+            ResetSearchView();
+            videoDetailsView.gameObject.SetActive(!searchView);
+            videoSearchResultsView.gameObject.SetActive(searchView);
+
+            if(!searchView)
+            {
+                parserParams.EmitEvent("hide-keyboard");
+                StopCoroutine(videoPlayerCheckCoroutine);
+                StartCoroutine(videoPlayerCheckCoroutine);
+
+                LoadVideoSettings(selectedVideo);
+            }
+        }
+
+        private void ResetSearchView()
+        {
+            if (updateSearchResultsCoroutine != null)
+            {
+                StopCoroutine(updateSearchResultsCoroutine);
+            }
+
+            StopCoroutine(SearchLoading());
+
+            customListTableData.data.Clear();
+            customListTableData.tableView.ReloadData();
+            selectedCell = -1;
+        }
+
+        private void UpdateLooping()
+        {
+            if (selectedVideo != null)
+            {
+                if (selectedVideo.loop)
+                {
+                    LoopingButtonText.text = "Loop";
+                }
+                else
+                {
+                    LoopingButtonText.text = "Once";
+                }
+            }
+        }
+
+        private void UpdateOffset(bool isDecreasing)
+        {
+            if (selectedVideo != null)
+            {
+                int magnitude = isOffsetInSeconds ? 1000 : 100;
+                magnitude = isDecreasing ? magnitude * -1 : magnitude;
+
+                selectedVideo.offset += magnitude;
+                currentVideoOffset.text = magnitude.ToString();
+            }
+        }
+
+        private void Save()
+        {
+            if(selectedVideo != null)
+            {
+                VideoLoader.SaveVideoToDisk(selectedVideo);
+            }
+        }
+
+        private IEnumerator UpdateSearchResults(List<YTResult> results)
         {
             List<CustomListTableData.CustomCellInfo> videos = new List<CustomListTableData.CustomCellInfo>();
 
@@ -150,31 +267,106 @@ namespace MusicVideoPlayer
 
             customListTableData.data = videos;
             customListTableData.tableView.ReloadData();
+
+            RefineButton.interactable = true;
+            searchResultsLoading.gameObject.SetActive(false);
+        }
+
+        private IEnumerator SearchLoading()
+        {
+            int count = 0;
+            string loadingText = "Loading Results";
+            searchResultsLoading.gameObject.SetActive(true);
+
+            while(searchResultsLoading.gameObject.activeInHierarchy)
+            {
+                string periods = string.Empty;
+                count++;
+
+                for (int i = 0; i < count; i++)
+                {
+                    periods += ".";
+                }
+
+                if(count == 3)
+                {
+                    count = 0;
+                }
+
+                searchResultsLoading.SetText(loadingText + periods);
+
+                yield return new WaitForSeconds(0.5f);
+            }
         }
 
         private IEnumerator CheckEnabled()
         {
             while(true)
             {
-                //if (currentVideoPlayer != null && currentVideoPlayer.activeInHierarchy)
-                //{
-                //    ScreenManager.Instance.SetScale(new Vector3(0.57f, 0.57f, 1f));
-                //    ScreenManager.Instance.SetPosition(currentVideoPlayer.transform.position);
-                //    ScreenManager.Instance.SetRotation(currentVideoPlayer.transform.eulerAngles);
-                //}
-                //else
-                //{
-                //    ScreenManager.Instance.SetPlacement(MVPSettings.instance.PlacementMode);
-                //}
+                if (currentVideoPlayer != null && currentVideoPlayer.activeInHierarchy)
+                {
+                    ScreenManager.Instance.SetScale(new Vector3(0.57f, 0.57f, 1f));
+                    ScreenManager.Instance.SetPosition(currentVideoPlayer.transform.position);
+                    ScreenManager.Instance.SetRotation(currentVideoPlayer.transform.eulerAngles);
+                }
+                else
+                {
+                    ScreenManager.Instance.SetPlacement(MVPSettings.instance.PlacementMode);
+                }
 
                 yield return null;
             }
         }
 
         #region Actions
+        [UIAction("on-looping-action")]
+        private void OnLoopingAction()
+        {
+            selectedVideo.loop = !selectedVideo.loop;
+            UpdateLooping();
+        }
+
+        [UIAction("on-offset-magnitude-action")]
+        private void OnOffsetMagnitudeAction()
+        {
+            isOffsetInSeconds = !isOffsetInSeconds;
+
+            if(isOffsetInSeconds)
+            {
+                offsetMagnitude.text = "S";
+            }
+            else
+            {
+                offsetMagnitude.text = "MS";
+            }
+        }
+
+        [UIAction("on-offset-decrease-action")]
+        private void OnOffsetDecreaseAction()
+        {
+            UpdateOffset(true);
+        }
+
+        [UIAction("on-offset-increase-action")]
+        private void OnOffsetIncreaseAction()
+        {
+            UpdateOffset(false);
+        }
+
+        [UIAction("on-delete-action")]
+        private void OnDeleteAction()
+        {
+            if(selectedVideo != null)
+            {
+                VideoLoader.Instance.DeleteVideo(selectedVideo);
+                LoadVideoSettings(null);
+            }
+        }
+
         [UIAction("on-preview-action")]
         private void OnPreviewAction()
         {
+            Plugin.logger.Debug("Is Preview: " + isPreviewing);
             if (isPreviewing)
             {
                 StopPreview();
@@ -192,10 +384,47 @@ namespace MusicVideoPlayer
         [UIAction("on-search-action")]
         private void OnSearchAction()
         {
-            videoDetailsView.gameObject.SetActive(false);
-            videoSearchResultsView.gameObject.SetActive(true);
-
+            ChangeView(true);
+            searchKeyboard.SetText(selectedLevel.songName + " - " + selectedLevel.songSubName);
             parserParams.EmitEvent("show-keyboard");
+        }
+
+        [UIAction("on-save-action")]
+        private void OnSaveAction()
+        {
+            Save();
+        }
+
+        [UIAction("on-back-action")]
+        private void OnBackAction()
+        {
+            ChangeView(false);
+        }
+
+        [UIAction("on-select-cell")]
+        private void OnSelectCell(TableView view, int idx)
+        {
+            if(customListTableData.data.Count > idx)
+            {
+                selectedCell = idx;
+                DownloadButton.interactable = true;
+                Plugin.logger.Debug($"Selected Cell: {YouTubeSearcher.searchResults[idx].ToString()}");
+            }
+            else
+            {
+                DownloadButton.interactable = false;
+                selectedCell = -1;
+            }
+        }
+
+        [UIAction("on-download-action")]
+        private void OnDownloadAction()
+        {
+            if(selectedCell >= 0)
+            {
+                VideoData data = new VideoData(YouTubeSearcher.searchResults[selectedCell], selectedLevel);
+                YouTubeDownloader.Instance.EnqueueVideo(data);
+            }
         }
 
         [UIAction("on-refine-action")]
@@ -207,11 +436,18 @@ namespace MusicVideoPlayer
         [UIAction("on-query")]
         private void OnQueryAction(string query)
         {
+            ResetSearchView();
+            DownloadButton.interactable = false;
+            RefineButton.interactable = false;
+            StartCoroutine(SearchLoading());
+
             YouTubeSearcher.Search(query, () =>
             {
-                StartCoroutine(UpdateSearchResults(YouTubeSearcher.searchResults));
+                updateSearchResultsCoroutine = UpdateSearchResults(YouTubeSearcher.searchResults);
+                StartCoroutine(updateSearchResultsCoroutine);
             });
         }
+
         #endregion
 
         #region Youtube Downloader
@@ -219,6 +455,7 @@ namespace MusicVideoPlayer
         {
             if (selectedLevel == video.level)
             {
+                OnBackAction();
                 LoadVideoSettings(video);
             }
         }
@@ -228,25 +465,20 @@ namespace MusicVideoPlayer
         public void HandleDidSelectLevel(LevelCollectionViewController sender, IPreviewBeatmapLevel level)
         {
             selectedLevel = level;
-            LoadVideoSettings(null);
+            selectedVideo = null;
+            ChangeView(false);
             Plugin.logger.Debug("Selected Level: " + level.songName);
         }
 
         private void MenuSceneActive()
         {
             ScreenManager.Instance.ShowScreen();
-
-            if (coroutineHandle == null)
-            {
-                coroutineHandle = CheckEnabled();
-                StartCoroutine(coroutineHandle);
-            }
+            ChangeView(false);
         }
 
         private void GameSceneLoaded()
         {
-            StopCoroutine(coroutineHandle);
-            coroutineHandle = null;
+            StopAllCoroutines();
 
             ScreenManager.Instance.SetPlacement(MVPSettings.instance.PlacementMode);
 
