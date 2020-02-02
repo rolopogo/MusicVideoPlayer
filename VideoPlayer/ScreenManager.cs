@@ -57,7 +57,6 @@ namespace MusicVideoPlayer
             BSEvents.songUnpaused += ResumeVideo;
             BSEvents.menuSceneLoadedFresh += OnMenuSceneLoaded;
             BSEvents.menuSceneLoaded += OnMenuSceneLoaded;
-            BSEvents.gameSceneLoaded += OnGameSceneLoaded;
 
             DontDestroyOnLoad(gameObject);
             
@@ -112,35 +111,40 @@ namespace MusicVideoPlayer
         
         private void OnMenuSceneLoaded()
         {
-            var pointer = Resources.FindObjectsOfTypeAll<VRPointer>().First();
-            if (pointer == null) return;
             if(currentVideo != null) PrepareVideo(currentVideo);
             PauseVideo();
             //HideScreen();
         }
 
-        private void OnGameSceneLoaded()
+        public void TryPlayVideo()
         {
-            var pointer = Resources.FindObjectsOfTypeAll<VRPointer>().Last();
-            if (pointer == null) return;
-            if (videoPlayer.time != offsetSec)
+            SetPlacement(MVPSettings.instance.PlacementMode);
+
+            if (IsVideoPlayable())
             {
-                // game was restarted
-                if (currentVideo.offset >= 0)
+                Plugin.logger.Debug("Video is playing!");
+
+                if(videoPlayer.time != offsetSec)
                 {
-                    videoPlayer.time = offsetSec;
+                    // game was restarted
+                    if (currentVideo.offset >= 0)
+                    {
+                        videoPlayer.time = offsetSec;
+                    }
+                    else
+                    {
+                        videoPlayer.time = 0;
+                    }
                 }
-                else
-                {
-                    videoPlayer.time = 0;
-                }
+
+                ShowScreen();
+                PlayVideo();
             }
-            if(currentVideo != null)
+            else
             {
-                if(currentVideo.downloadState == DownloadState.Downloaded)
-                {
-                    PlayVideo();
-                }
+                Plugin.logger.Debug("Video could not be found!");
+
+                HideScreen();
             }
         }
 

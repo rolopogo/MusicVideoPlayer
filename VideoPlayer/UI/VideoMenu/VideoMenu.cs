@@ -77,9 +77,6 @@ namespace MusicVideoPlayer
         [UIComponent("refine-button")]
         private Button RefineButton;
 
-        [UIComponent("save-button")]
-        private Button SaveButton;
-
         [UIComponent("preview-button")]
         private Button PreviewButton;
 
@@ -152,6 +149,7 @@ namespace MusicVideoPlayer
 
             LoadVideoDownloadState();
 
+            Plugin.logger.Debug("Has Loaded: " + videoData);
             ScreenManager.Instance.PrepareVideo(videoData);
         }
 
@@ -159,7 +157,6 @@ namespace MusicVideoPlayer
         {
             OffsetDecreaseButton.interactable = enable;
             OffsetIncreaseButton.interactable = enable;
-            SaveButton.interactable = enable;
             LoopingButton.interactable = enable;
 
             if(selectedVideo == null || selectedVideo.downloadState != DownloadState.Downloaded)
@@ -431,6 +428,7 @@ namespace MusicVideoPlayer
             {
                 VideoData data = new VideoData(YouTubeSearcher.searchResults[selectedCell], selectedLevel);
                 YouTubeDownloader.Instance.EnqueueVideo(data);
+                VideoLoader.Instance.AddVideo(data);
             }
         }
 
@@ -515,8 +513,7 @@ namespace MusicVideoPlayer
         private void GameSceneLoaded()
         {
             StopAllCoroutines();
-
-            ScreenManager.Instance.SetPlacement(MVPSettings.instance.PlacementMode);
+            ScreenManager.Instance.TryPlayVideo();
         }
         #endregion
     }
