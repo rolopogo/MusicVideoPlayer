@@ -56,8 +56,11 @@ namespace MusicVideoPlayer
         [UIComponent("looping-button")]
         private TextMeshProUGUI LoopingButtonText;
 
-        [UIComponent("offset-magnitude")]
-        private ClickableText offsetMagnitude;
+        [UIComponent("download-state-text")]
+        private TextMeshProUGUI DownloadStateText;
+
+        [UIComponent("offset-magnitude-button")]
+        private TextMeshProUGUI offsetMagnitudeButton;
 
         [UIComponent("offset-decrease-button")]
         private Button OffsetDecreaseButton;
@@ -147,17 +150,25 @@ namespace MusicVideoPlayer
                 EnableButtons(false);
             }
 
+            LoadVideoDownloadState();
+
             ScreenManager.Instance.PrepareVideo(videoData);
         }
 
         private void EnableButtons(bool enable)
         {
-            DeleteButton.interactable = enable;
             OffsetDecreaseButton.interactable = enable;
             OffsetIncreaseButton.interactable = enable;
             SaveButton.interactable = enable;
             LoopingButton.interactable = enable;
+
+            if(selectedVideo == null || selectedVideo.downloadState != DownloadState.Downloaded)
+            {
+                enable = false;
+            }
+
             PreviewButton.interactable = enable;
+            DeleteButton.interactable = enable;
         }
 
         private void SetPreviewState()
@@ -176,7 +187,6 @@ namespace MusicVideoPlayer
         {
             isPreviewing = false;
             ScreenManager.Instance.PrepareVideo(selectedVideo);
-            ScreenManager.Instance.PauseVideo();
             songPreviewPlayer.FadeOut();
             SetPreviewState();
         }
@@ -235,7 +245,8 @@ namespace MusicVideoPlayer
                 magnitude = isDecreasing ? magnitude * -1 : magnitude;
 
                 selectedVideo.offset += magnitude;
-                currentVideoOffset.text = magnitude.ToString();
+                currentVideoOffset.text = selectedVideo.offset.ToString();
+                Save();
             }
         }
 
@@ -243,6 +254,7 @@ namespace MusicVideoPlayer
         {
             if(selectedVideo != null)
             {
+                StopPreview();
                 VideoLoader.SaveVideoToDisk(selectedVideo);
             }
         }
@@ -253,7 +265,8 @@ namespace MusicVideoPlayer
 
             foreach (var result in results)
             {
-                var item = new CustomListTableData.CustomCellInfo(result.title, result.description);
+                string description = $"[{result.duration}] {result.description}";
+                var item = new CustomListTableData.CustomCellInfo(result.title, description);
 
                 UnityWebRequest request = UnityWebRequestTexture.GetTexture(result.thumbnailURL);
                 yield return request.SendWebRequest();
@@ -324,6 +337,7 @@ namespace MusicVideoPlayer
         {
             selectedVideo.loop = !selectedVideo.loop;
             UpdateLooping();
+            Save();
         }
 
         [UIAction("on-offset-magnitude-action")]
@@ -333,11 +347,11 @@ namespace MusicVideoPlayer
 
             if(isOffsetInSeconds)
             {
-                offsetMagnitude.text = "S";
+                offsetMagnitudeButton.text = "+1000";
             }
             else
             {
-                offsetMagnitude.text = "MS";
+                offsetMagnitudeButton.text = "+100";
             }
         }
 
@@ -366,7 +380,6 @@ namespace MusicVideoPlayer
         [UIAction("on-preview-action")]
         private void OnPreviewAction()
         {
-            Plugin.logger.Debug("Is Preview: " + isPreviewing);
             if (isPreviewing)
             {
                 StopPreview();
@@ -387,12 +400,6 @@ namespace MusicVideoPlayer
             ChangeView(true);
             searchKeyboard.SetText(selectedLevel.songName + " - " + selectedLevel.songSubName);
             parserParams.EmitEvent("show-keyboard");
-        }
-
-        [UIAction("on-save-action")]
-        private void OnSaveAction()
-        {
-            Save();
         }
 
         [UIAction("on-back-action")]
@@ -455,9 +462,38 @@ namespace MusicVideoPlayer
         {
             if (selectedLevel == video.level)
             {
-                OnBackAction();
+                ChangeView(false);
                 LoadVideoSettings(video);
             }
+        }
+
+        private void LoadVideoDownloadState()
+        {
+            string state = "No Video";
+
+            if (selectedVideo != null)
+            {
+                switch (selectedVideo.downloadState)
+                {
+                    case DownloadState.NotDownloaded:
+                        state = "No Video";
+                        break;
+                    case DownloadState.Queued:
+                        state = "Queued";
+                        break;
+                    case DownloadState.Downloading:
+                        state = $"Downloading {selectedVideo.downloadProgress * 100}%";
+                        break;
+                    case DownloadState.Downloaded:
+                        state = "Downloaded";
+                        break;
+                    case DownloadState.Cancelled:
+                        state = "Cancelled";
+                        break;
+                }
+            }
+
+            DownloadStateText.text = "Download Progress: " + state;
         }
         #endregion
 
@@ -481,15 +517,6 @@ namespace MusicVideoPlayer
             StopAllCoroutines();
 
             ScreenManager.Instance.SetPlacement(MVPSettings.instance.PlacementMode);
-
-            if (!ScreenManager.Instance.IsVideoPlayable())
-            {
-                ScreenManager.Instance.HideScreen();
-            }
-            else
-            {
-                ScreenManager.Instance.ShowScreen();
-            }
         }
         #endregion
     }

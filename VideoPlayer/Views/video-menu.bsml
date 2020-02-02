@@ -10,23 +10,21 @@
           <text id='current-video-description' word-wrapping='true' font-align='TopLeft' overflow-mode='Ellipsis' font-size='2'></text>
         </vertical>
       </vertical>
-      <vertical vertical-fit='PreferredSize' horizontal-fit='PreferredSize' spacing='5' pad-bottom='30'>
+      <vertical vertical-fit='PreferredSize' horizontal-fit='PreferredSize' spacing='3' pad-bottom='30'>
         <horizontal spacing='3' horizontal-fit='PreferredSize'>
-          <button id='offset-decrease-button' text='-' pad='0' on-click='on-offset-decrease-action' all-uppercase='false' pref-width='5' pref-height='5'></button>
+          <button id='offset-decrease-button' hover-hint='Starts Video Later' text='-' pad='0' on-click='on-offset-decrease-action' all-uppercase='false' pref-width='5' pref-height='5'></button>
           <text id='current-video-offset' align='Center'></text>
-          <vertical bg='round-rect-panel' pref-height='5' pref-width='5' pad-left='3' pad-right='3'>
-            <clickable-text id='offset-magnitude' align='Center' text='MS' on-click='on-offset-magnitude-action' font-size='3'></clickable-text>
-          </vertical>
-          <button id='offset-increase-button' text='+' pad='0' on-click='on-offset-increase-action' all-uppercase='false' pref-width='5' pref-height='5'></button>
+          <button id='offset-increase-button' hover-hint='Starts Video Earlier' text='+' pad='0' on-click='on-offset-increase-action' all-uppercase='false' pref-width='5' pref-height='5'></button>
         </horizontal>
+        <button id='offset-magnitude-button' text='+100' on-click='on-offset-magnitude-action' preferred-height='5' font-size='3'></button>
         <button id='looping-button' text='Loop' on-click='on-looping-action' preferred-height='5' font-size='3'></button>
+        <text id='download-state-text' text='Download Progress: Complete' align='Center' font-size='3'></text>
       </vertical>
     </horizontal>
     <bottom-button-panel pad-top='3'>
       <button id='delete-button' text='Delete' on-click='on-delete-action'/>
       <button id='preview-button' text='Preview' on-click='on-preview-action'/>
       <button id='search-button' text='Search' on-click='on-search-action'/>
-      <button id='save-button' text='Save' on-click='on-save-action'/>
     </bottom-button-panel>
   </bg>
   <bg id='video-search-results'>
