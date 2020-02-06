@@ -214,8 +214,12 @@ namespace MusicVideoPlayer
 
             StopCoroutine(SearchLoading());
 
-            customListTableData.data.Clear();
-            customListTableData.tableView.ReloadData();
+            if(customListTableData.data != null || customListTableData.data.Count > 0)
+            {
+                customListTableData.data.Clear();
+                customListTableData.tableView.ReloadData();
+            }
+
             selectedCell = -1;
         }
 
