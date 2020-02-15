@@ -1,5 +1,6 @@
 ﻿using BeatSaberMarkupLanguage.Attributes;
 using BeatSaberMarkupLanguage.Components;
+using BeatSaberMarkupLanguage.GameplaySetup;
 using BeatSaberMarkupLanguage.MenuButtons;
 using BeatSaberMarkupLanguage.Parser;
 using BS_Utils.Utilities;
@@ -7,6 +8,7 @@ using HMUI;
 using MusicVideoPlayer.UI;
 using MusicVideoPlayer.Util;
 using MusicVideoPlayer.YT;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,6 +25,9 @@ namespace MusicVideoPlayer
     public class VideoMenu : PersistentSingleton<VideoMenu>
     {
         #region Fields
+        [UIObject("root-object")]
+        private GameObject root;
+
         [UIObject("current-video-player")]
         private GameObject currentVideoPlayer;
 
@@ -98,13 +103,17 @@ namespace MusicVideoPlayer
 
         private SongPreviewPlayer songPreviewPlayer;
 
+        private VideoMenuStatus statusViewer;
+
         private bool isPreviewing = false;
 
         private bool isOffsetInSeconds = false;
 
-        private IEnumerator updateSearchResultsCoroutine = null;
+        private bool isActive = false;
 
-        private IEnumerator videoPlayerCheckCoroutine = null;
+        private bool isPlayingLevel = false;
+
+        private IEnumerator updateSearchResultsCoroutine = null;
 
         private int selectedCell;
         #endregion
@@ -119,13 +128,26 @@ namespace MusicVideoPlayer
             YouTubeDownloader.Instance.downloadProgress += VideoDownloaderDownloadProgress;
             BSEvents.levelSelected += HandleDidSelectLevel;
             BSEvents.gameSceneLoaded += GameSceneLoaded;
-            BSEvents.menuSceneActive += MenuSceneActive;
             songPreviewPlayer = Resources.FindObjectsOfTypeAll<SongPreviewPlayer>().First();
 
             videoDetailsViewRect.gameObject.SetActive(true);
             videoSearchResultsViewRect.gameObject.SetActive(false);
 
-            videoPlayerCheckCoroutine = CheckEnabled();
+            statusViewer = root.AddComponent<VideoMenuStatus>();
+            statusViewer.DidEnable += StatusViewerDidEnable;
+            statusViewer.DidDisable += StatusViewerDidDisable;
+        }
+
+        private void StatusViewerDidEnable(object sender, EventArgs e)
+        {
+            Plugin.logger.Debug("Activated");
+            Activate();
+        }
+
+        private void StatusViewerDidDisable(object sender, EventArgs e)
+        {
+            Plugin.logger.Debug("Deactivated");
+            Deactivate();
         }
 
         #region Public Methods
@@ -160,6 +182,34 @@ namespace MusicVideoPlayer
 
             Plugin.logger.Debug("Has Loaded: " + videoData);
             ScreenManager.Instance.PrepareVideo(videoData);
+        }
+
+        public void Activate()
+        {
+            isActive = true;
+            isPlayingLevel = false;
+            ScreenManager.Instance.ShowScreen();
+            ChangeView(false);
+        }
+
+        public void Deactivate()
+        {
+            StopPreview();
+
+            isActive = false;
+            selectedVideo = null;
+
+            currentVideoTitleText.text = "NO VIDEO SET";
+            currentVideoDescriptionText.text = "";
+            currentVideoOffsetText.text = "N/A";
+            EnableButtons(false);
+
+            ScreenManager.Instance.SetPlacement(MVPSettings.instance.PlacementMode);
+
+            if(!isPlayingLevel)
+            {
+                selectedLevel = null;
+            }
         }
         #endregion
 
@@ -209,10 +259,25 @@ namespace MusicVideoPlayer
             if (!searchView)
             {
                 parserParams.EmitEvent("hide-keyboard");
-                StopCoroutine(videoPlayerCheckCoroutine);
-                StartCoroutine(videoPlayerCheckCoroutine);
+
+                if(isActive)
+                {
+                    ScreenManager.Instance.SetScale(new Vector3(0.57f, 0.57f, 1f));
+
+                    var position = videoDetailsViewRect.transform.position;
+                    position.y += 0.25f;
+                    position.z -= 0.25f;
+                    position.x -= 0.10f;
+
+                    ScreenManager.Instance.SetPosition(position);
+                    ScreenManager.Instance.SetRotation(videoDetailsViewRect.transform.eulerAngles);
+                }
 
                 LoadVideoSettings(selectedVideo);
+            }
+            else
+            {
+                ScreenManager.Instance.SetPlacement(MVPSettings.instance.PlacementMode);
             }
         }
 
@@ -350,25 +415,6 @@ namespace MusicVideoPlayer
                 searchResultsLoadingText.SetText(loadingText + periods);
 
                 yield return new WaitForSeconds(0.5f);
-            }
-        }
-
-        private IEnumerator CheckEnabled()
-        {
-            while (true)
-            {
-                if (currentVideoPlayer != null && currentVideoPlayer.activeInHierarchy)
-                {
-                    ScreenManager.Instance.SetScale(new Vector3(0.57f, 0.57f, 1f));
-                    ScreenManager.Instance.SetPosition(currentVideoPlayer.transform.position);
-                    ScreenManager.Instance.SetRotation(currentVideoPlayer.transform.eulerAngles);
-                }
-                else
-                {
-                    ScreenManager.Instance.SetPlacement(MVPSettings.instance.PlacementMode);
-                }
-
-                yield return null;
             }
         }
         #endregion
@@ -521,16 +567,39 @@ namespace MusicVideoPlayer
             Plugin.logger.Debug("Selected Level: " + level.songName);
         }
 
-        private void MenuSceneActive()
-        {
-            ScreenManager.Instance.ShowScreen();
-            ChangeView(false);
-        }
-
         private void GameSceneLoaded()
         {
+            isPlayingLevel = true;
             StopAllCoroutines();
             ScreenManager.Instance.TryPlayVideo();
+        }
+        #endregion
+
+        #region Classes
+        public class VideoMenuStatus : MonoBehaviour
+        {
+            public event EventHandler DidEnable;
+            public event EventHandler DidDisable;
+
+            void OnEnable()
+            {
+                var handler = DidEnable;
+
+                if(handler != null)
+                {
+                    handler(this, EventArgs.Empty);
+                }
+            }
+
+            void OnDisable()
+            {
+                var handler = DidDisable;
+
+                if (handler != null)
+                {
+                    handler(this, EventArgs.Empty);
+                }
+            }
         }
         #endregion
     }
