@@ -89,6 +89,9 @@ namespace MusicVideoPlayer
 
         [UIComponent("looping-button")]
         private Button loopingButton;
+
+        [UIComponent("search-button")]
+        private Button searchButton;
         #endregion
 
         [UIComponent("search-keyboard")]
@@ -110,8 +113,6 @@ namespace MusicVideoPlayer
         private bool isOffsetInSeconds = false;
 
         private bool isActive = false;
-
-        private bool isPlayingLevel = false;
 
         private IEnumerator updateSearchResultsCoroutine = null;
 
@@ -136,26 +137,18 @@ namespace MusicVideoPlayer
             statusViewer = root.AddComponent<VideoMenuStatus>();
             statusViewer.DidEnable += StatusViewerDidEnable;
             statusViewer.DidDisable += StatusViewerDidDisable;
+
+            Resources.FindObjectsOfTypeAll<MissionSelectionMapViewController>().FirstOrDefault().didActivateEvent += MissionSelectionDidActivate;
         }
 
-        private void StatusViewerDidEnable(object sender, EventArgs e)
-        {
-            Plugin.logger.Debug("Activated");
-            Activate();
-        }
-
-        private void StatusViewerDidDisable(object sender, EventArgs e)
-        {
-            Plugin.logger.Debug("Deactivated");
-            Deactivate();
-        }
+        
 
         #region Public Methods
         public void LoadVideoSettings(VideoData videoData)
         {
             StopPreview();
 
-            if (videoData == null)
+            if (videoData == null && selectedLevel != null)
             {
                 videoData = VideoLoader.Instance.GetVideo(selectedLevel);
             }
@@ -187,7 +180,6 @@ namespace MusicVideoPlayer
         public void Activate()
         {
             isActive = true;
-            isPlayingLevel = false;
             ScreenManager.Instance.ShowScreen();
             ChangeView(false);
         }
@@ -205,11 +197,6 @@ namespace MusicVideoPlayer
             EnableButtons(false);
 
             ScreenManager.Instance.SetPlacement(MVPSettings.instance.PlacementMode);
-
-            if(!isPlayingLevel)
-            {
-                selectedLevel = null;
-            }
         }
         #endregion
 
@@ -227,6 +214,15 @@ namespace MusicVideoPlayer
 
             previewButton.interactable = enable;
             deleteButton.interactable = enable;
+
+            if(selectedLevel == null)
+            {
+                searchButton.interactable = false;
+            }
+            else
+            {
+                searchButton.interactable = true;
+            }
         }
 
         private void SetPreviewState()
@@ -569,9 +565,27 @@ namespace MusicVideoPlayer
 
         private void GameSceneLoaded()
         {
-            isPlayingLevel = true;
             StopAllCoroutines();
             ScreenManager.Instance.TryPlayVideo();
+        }
+        #endregion
+
+        #region Events
+        private void MissionSelectionDidActivate(bool firstActivation, ViewController.ActivationType activationType)
+        {
+            selectedVideo = null;
+            selectedLevel = null;
+            Activate();
+        }
+
+        private void StatusViewerDidEnable(object sender, EventArgs e)
+        {
+            Activate();
+        }
+
+        private void StatusViewerDidDisable(object sender, EventArgs e)
+        {
+            Deactivate();
         }
         #endregion
 
