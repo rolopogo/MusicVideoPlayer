@@ -100,7 +100,9 @@ namespace MusicVideoPlayer
         [UIParams]
         private BSMLParserParams parserParams;
 
-        private IPreviewBeatmapLevel selectedLevel;
+        private Vector3 videoPlayerDetailScale = new Vector3(0.57f, 0.57f, 1f);
+
+        private Vector3 videoPlayerDetailPosition = new Vector3(-2.35f, 1.7f, 1.3f);
 
         private VideoData selectedVideo;
 
@@ -113,6 +115,8 @@ namespace MusicVideoPlayer
         private bool isOffsetInSeconds = false;
 
         private bool isActive = false;
+
+        private IPreviewBeatmapLevel selectedLevel;
 
         private IEnumerator updateSearchResultsCoroutine = null;
 
@@ -140,8 +144,6 @@ namespace MusicVideoPlayer
 
             Resources.FindObjectsOfTypeAll<MissionSelectionMapViewController>().FirstOrDefault().didActivateEvent += MissionSelectionDidActivate;
         }
-
-        
 
         #region Public Methods
         public void LoadVideoSettings(VideoData videoData)
@@ -258,14 +260,8 @@ namespace MusicVideoPlayer
 
                 if(isActive)
                 {
-                    ScreenManager.Instance.SetScale(new Vector3(0.57f, 0.57f, 1f));
-
-                    var position = videoDetailsViewRect.transform.position;
-                    position.y += 0.25f;
-                    position.z -= 0.25f;
-                    position.x -= 0.10f;
-
-                    ScreenManager.Instance.SetPosition(position);
+                    ScreenManager.Instance.SetScale(videoPlayerDetailScale);
+                    ScreenManager.Instance.SetPosition(videoPlayerDetailPosition);
                     ScreenManager.Instance.SetRotation(videoDetailsViewRect.transform.eulerAngles);
                 }
 
@@ -472,6 +468,7 @@ namespace MusicVideoPlayer
             {
                 isPreviewing = true;
                 ScreenManager.Instance.PlayVideo();
+                songPreviewPlayer.volume = 1;
                 songPreviewPlayer.CrossfadeTo(selectedLevel.GetPreviewAudioClipAsync(new CancellationToken()).Result, 0, selectedLevel.previewDuration, 1f);
             }
 
