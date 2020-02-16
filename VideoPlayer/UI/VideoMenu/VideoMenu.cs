@@ -148,7 +148,7 @@ namespace MusicVideoPlayer
         #region Public Methods
         public void LoadVideoSettings(VideoData videoData)
         {
-            StopPreview();
+            StopPreview(false);
 
             if (videoData == null && selectedLevel != null)
             {
@@ -188,7 +188,7 @@ namespace MusicVideoPlayer
 
         public void Deactivate()
         {
-            StopPreview();
+            StopPreview(false);
 
             isActive = false;
             selectedVideo = null;
@@ -239,17 +239,22 @@ namespace MusicVideoPlayer
             }
         }
 
-        private void StopPreview()
+        private void StopPreview(bool stopPreviewMusic)
         {
             isPreviewing = false;
             ScreenManager.Instance.PrepareVideo(selectedVideo);
-            songPreviewPlayer.FadeOut();
+
+            if(stopPreviewMusic)
+            {
+                songPreviewPlayer.FadeOut();
+            }
+
             SetPreviewState();
         }
 
         private void ChangeView(bool searchView)
         {
-            StopPreview();
+            StopPreview(false);
             ResetSearchView();
             videoDetailsViewRect.gameObject.SetActive(!searchView);
             videoSearchResultsViewRect.gameObject.SetActive(searchView);
@@ -323,7 +328,7 @@ namespace MusicVideoPlayer
         {
             if (selectedVideo != null)
             {
-                StopPreview();
+                StopPreview(false);
                 VideoLoader.SaveVideoToDisk(selectedVideo);
             }
         }
@@ -462,7 +467,7 @@ namespace MusicVideoPlayer
         {
             if (isPreviewing)
             {
-                StopPreview();
+                StopPreview(true);
             }
             else
             {
