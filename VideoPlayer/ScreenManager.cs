@@ -30,6 +30,7 @@ namespace MusicVideoPlayer
         private Color _onColor = Color.white.ColorWithAlpha(0) * 0.85f;
 
         public VideoPlayer videoPlayer;
+        private AudioTimeSyncController syncController;
         private float offsetSec = 0f;
 
         public static void OnLoad()
@@ -118,34 +119,7 @@ namespace MusicVideoPlayer
 
         public void TryPlayVideo()
         {
-            SetPlacement(MVPSettings.instance.PlacementMode);
-
-            if (IsVideoPlayable())
-            {
-                Plugin.logger.Debug("Video is playing!");
-
-                if(videoPlayer.time != offsetSec)
-                {
-                    // game was restarted
-                    if (currentVideo.offset >= 0)
-                    {
-                        videoPlayer.time = offsetSec;
-                    }
-                    else
-                    {
-                        videoPlayer.time = 0;
-                    }
-                }
-
-                ShowScreen();
-                PlayVideo();
-            }
-            else
-            {
-                Plugin.logger.Debug("Video could not be found!");
-
-                HideScreen();
-            }
+            StartCoroutine(WaitForAudioSync());
         }
 
         private void VideoPlayerErrorReceived(VideoPlayer source, string message)
@@ -182,7 +156,7 @@ namespace MusicVideoPlayer
             videoPlayer.Pause();
         }
 
-        public void PlayVideo()
+        public void PlayVideo(bool sync)
         {
             if (!showVideo) return;
             if (currentVideo == null) return;
@@ -191,10 +165,11 @@ namespace MusicVideoPlayer
             ShowScreen();
             vsRenderer.material.color = _onColor;
 
+            Plugin.logger.Debug("Offset for video: " + offsetSec);
             if (offsetSec < 0)
             {
                 StopAllCoroutines();
-                StartCoroutine(StartVideoDelayed(offsetSec));
+                StartCoroutine(StartVideoDelayed(offsetSec, sync));
             }
             else
             {
@@ -202,7 +177,41 @@ namespace MusicVideoPlayer
             }
         }
 
-        private IEnumerator StartVideoDelayed(float offset)
+        private IEnumerator WaitForAudioSync()
+        {
+            yield return new WaitUntil(() => Resources.FindObjectsOfTypeAll<AudioTimeSyncController>().Any());
+            syncController = Resources.FindObjectsOfTypeAll<AudioTimeSyncController>().First();
+
+            SetPlacement(MVPSettings.instance.PlacementMode);
+
+            if (IsVideoPlayable())
+            {
+                Plugin.logger.Debug("Video is playing!");
+
+                if (videoPlayer.time != offsetSec)
+                {
+                    // game was restarted
+                    if (currentVideo.offset >= 0)
+                    {
+                        videoPlayer.time = offsetSec;
+                    }
+                    else
+                    {
+                        videoPlayer.time = 0;
+                    }
+                }
+
+                ShowScreen();
+                PlayVideo(true);
+            }
+            else
+            {
+                Plugin.logger.Debug("Video could not be found!");
+                HideScreen();
+            }
+        }
+
+        private IEnumerator StartVideoDelayed(float offset, bool sync)
         {
             if(offset >= 0)
             {
@@ -214,11 +223,20 @@ namespace MusicVideoPlayer
 
             // Wait
             float timeElapsed = 0;
-            while (timeElapsed < -offset)
+
+            if(sync)
             {
-                timeElapsed += Time.deltaTime;
-                yield return null;
+                yield return new WaitUntil(() => syncController.songTime >= -offset);
             }
+            else
+            {
+                while (timeElapsed < -offset)
+                {
+                    timeElapsed += Time.deltaTime;
+                    yield return null;
+                }
+            }
+            
             // Time has elapsed, start video
             // frames are short enough that we shouldn't notice imprecise start time
             videoPlayer.Play();

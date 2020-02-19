@@ -472,7 +472,7 @@ namespace MusicVideoPlayer
             else
             {
                 isPreviewing = true;
-                ScreenManager.Instance.PlayVideo();
+                ScreenManager.Instance.PlayVideo(false);
                 songPreviewPlayer.volume = 1;
                 songPreviewPlayer.CrossfadeTo(selectedLevel.GetPreviewAudioClipAsync(new CancellationToken()).Result, 0, selectedLevel.previewDuration, 1f);
             }
@@ -570,6 +570,7 @@ namespace MusicVideoPlayer
             StopAllCoroutines();
             ScreenManager.Instance.TryPlayVideo();
         }
+
         #endregion
 
         #region Events
