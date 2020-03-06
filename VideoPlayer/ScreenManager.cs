@@ -1,4 +1,5 @@
-﻿using CustomUI.Utilities;
+﻿using BS_Utils.Utilities;
+using MusicVideoPlayer.UI;
 using MusicVideoPlayer.Util;
 using System;
 using System.Collections;
@@ -12,7 +13,6 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.Video;
 using VRUIControls;
-using BSEvents = MusicVideoPlayer.Util.BSEvents;
 
 namespace MusicVideoPlayer
 {
@@ -20,22 +20,23 @@ namespace MusicVideoPlayer
     {
         public static ScreenManager Instance;
 
-        public static bool showVideo = false;
+        public static bool showVideo = true;
         public VideoPlacement placement;
 
         private VideoData currentVideo;
         private GameObject screen;
         private Renderer vsRenderer;
         private Shader glowShader;
-        private MoverPointer _moverPointer;
-        private CustomBloomPrePass _customBloomPrePass;
         private Color _onColor = Color.white.ColorWithAlpha(0) * 0.85f;
 
         public VideoPlayer videoPlayer;
+        private AudioTimeSyncController syncController;
         private float offsetSec = 0f;
 
         public static void OnLoad()
         {
+            Plugin.logger.Debug("OnLoad: ScreenManager");
+
             if (Instance == null)
                 new GameObject("VideoManager").AddComponent<ScreenManager>();
         }
@@ -47,21 +48,20 @@ namespace MusicVideoPlayer
                 Destroy(this);
                 return;
             }
+
             Instance = this;
 
-            showVideo = Plugin.config.GetBool("Settings", "showVideo", true, true);
-            placement = (VideoPlacement)Plugin.config.GetInt("Settings", "ScreenPositionMode", (int)VideoPlacement.Bottom, true);
+            showVideo = MVPSettings.instance.ShowVideoSettings;
+            placement = MVPSettings.instance.PlacementMode;
 
             BSEvents.songPaused += PauseVideo;
             BSEvents.songUnpaused += ResumeVideo;
             BSEvents.menuSceneLoadedFresh += OnMenuSceneLoaded;
             BSEvents.menuSceneLoaded += OnMenuSceneLoaded;
-            BSEvents.gameSceneLoaded += OnGameSceneLoaded;
 
             DontDestroyOnLoad(gameObject);
             
             CreateScreen();
-            HideScreen();
         }
 
 
@@ -83,7 +83,7 @@ namespace MusicVideoPlayer
             body.transform.localPosition = new Vector3(0, 0, 0.1f);
             body.transform.localScale = new Vector3(16f / 9f + 0.1f, 1.1f, 0.1f);
             Renderer bodyRenderer = body.GetComponent<Renderer>();
-            bodyRenderer.material = new Material(Resources.FindObjectsOfTypeAll<Material>().First(x => x.name == "DarkEnvironment1")); // finding objects is wonky because platforms hides them
+            bodyRenderer.material = new Material(Resources.FindObjectsOfTypeAll<Material>().First(x => x.name == "DarkEnvironmentSimple")); // finding objects is wonky because platforms hides them
 
             GameObject videoScreen = GameObject.CreatePrimitive(PrimitiveType.Quad);
             if (videoScreen.GetComponent<Collider>() != null) Destroy(videoScreen.GetComponent<Collider>());
@@ -97,8 +97,6 @@ namespace MusicVideoPlayer
             screen.transform.position = VideoPlacementSetting.Position(placement);
             screen.transform.eulerAngles = VideoPlacementSetting.Rotation(placement);
             screen.transform.localScale = VideoPlacementSetting.Scale(placement) * Vector3.one;
-
-            _customBloomPrePass = videoScreen.AddComponent<CustomBloomPrePass>();
             
             videoPlayer = gameObject.AddComponent<VideoPlayer>();
             videoPlayer.isLooping = true;
@@ -114,91 +112,14 @@ namespace MusicVideoPlayer
         
         private void OnMenuSceneLoaded()
         {
-            var pointer = Resources.FindObjectsOfTypeAll<VRPointer>().First();
-            if (pointer == null) return;
-
-            if (_moverPointer)
-            {
-                _moverPointer.wasMoved -= ScreenWasMoved;
-                Destroy(_moverPointer);
-            }
-            _moverPointer = pointer.gameObject.AddComponent<MoverPointer>();
-            _moverPointer.Init(screen.transform);
-            _moverPointer.wasMoved += ScreenWasMoved;
-
             if(currentVideo != null) PrepareVideo(currentVideo);
             PauseVideo();
-            HideScreen();
+            //HideScreen();
         }
 
-        private void OnGameSceneLoaded()
+        public void TryPlayVideo()
         {
-            var pointer = Resources.FindObjectsOfTypeAll<VRPointer>().Last();
-            if (pointer == null) return;
-            if (_moverPointer)
-            {
-                _moverPointer.wasMoved -= ScreenWasMoved;
-                Destroy(_moverPointer);
-            }
-            _moverPointer = pointer.gameObject.AddComponent<MoverPointer>();
-            _moverPointer.Init(screen.transform);
-            _moverPointer.wasMoved += ScreenWasMoved;
-
-            Plugin.logger.Info("Checking Playback Speed");
-            var levelData = BS_Utils.Plugin.LevelData;
-            float practiceOffset = 0;
-            if (levelData.GameplayCoreSceneSetupData.practiceSettings != null)
-            {
-                Plugin.logger.Info("Practice mode");
-                if (levelData.GameplayCoreSceneSetupData.practiceSettings.songSpeedMul != videoPlayer.playbackSpeed)
-                {
-                    Plugin.logger.Info("Changing Song Speed1");
-                    videoPlayer.playbackSpeed = levelData.GameplayCoreSceneSetupData.practiceSettings.songSpeedMul;
-                }
-
-                practiceOffset = levelData.GameplayCoreSceneSetupData.practiceSettings.startSongTime;
-            }
-            else if (levelData.GameplayCoreSceneSetupData.gameplayModifiers.songSpeedMul != videoPlayer.playbackSpeed)
-            {
-                Plugin.logger.Info("Song Speed Mul Changed");
-                videoPlayer.playbackSpeed = levelData.GameplayCoreSceneSetupData.gameplayModifiers.songSpeedMul;
-                Plugin.logger.Info("changed Song Speed2");
-            }
-
-            if (videoPlayer.time != offsetSec + practiceOffset)
-            {
-                // game was restarted
-                if (currentVideo.offset + practiceOffset >= 0)
-                {
-                    videoPlayer.time = offsetSec + practiceOffset;
-                }
-                else
-                {
-                    videoPlayer.time = 0;
-                }
-            }
-
-            if(currentVideo != null)
-            {
-                if(currentVideo.downloadState == DownloadState.Downloaded)
-                {
-                    PlayVideo();
-                }
-            }
-        }
-
-        private void ScreenWasMoved(Vector3 pos, Quaternion rot, float scale)
-        {
-            screen.transform.position = pos;
-            screen.transform.rotation = rot;
-            screen.transform.localScale = scale *  Vector3.one;
-
-            Plugin.config.SetString("Placement", "CustomPosition", pos.ToString());
-            Plugin.config.SetString("Placement", "CustomRotation", rot.eulerAngles.ToString());
-            Plugin.config.SetFloat("Placement", "CustomScale", scale);
-
-            placement = VideoPlacement.Custom;
-            Plugin.config.SetInt("Settings", "ScreenPositionMode", (int)placement);
+            StartCoroutine(WaitForAudioSync());
         }
 
         private void VideoPlayerErrorReceived(VideoPlayer source, string message)
@@ -233,13 +154,9 @@ namespace MusicVideoPlayer
             if(!videoPlayer.isPrepared) videoPlayer.Prepare();
             vsRenderer.material.color = Color.clear;
             videoPlayer.Pause();
-            for (ushort i = 0; i < videoPlayer.audioTrackCount; i++)
-            {
-                videoPlayer.EnableAudioTrack(i, false); //Mute Audio
-            }
         }
 
-        public void PlayVideo()
+        public void PlayVideo(bool sync)
         {
             if (!showVideo) return;
             if (currentVideo == null) return;
@@ -248,10 +165,11 @@ namespace MusicVideoPlayer
             ShowScreen();
             vsRenderer.material.color = _onColor;
 
+            Plugin.logger.Debug("Offset for video: " + offsetSec);
             if (offsetSec < 0)
             {
                 StopAllCoroutines();
-                StartCoroutine(StartVideoDelayed(offsetSec));
+                StartCoroutine(StartVideoDelayed(offsetSec, sync));
             }
             else
             {
@@ -259,7 +177,41 @@ namespace MusicVideoPlayer
             }
         }
 
-        private IEnumerator StartVideoDelayed(float offset)
+        private IEnumerator WaitForAudioSync()
+        {
+            yield return new WaitUntil(() => Resources.FindObjectsOfTypeAll<AudioTimeSyncController>().Any());
+            syncController = Resources.FindObjectsOfTypeAll<AudioTimeSyncController>().First();
+
+            SetPlacement(MVPSettings.instance.PlacementMode);
+
+            if (IsVideoPlayable())
+            {
+                Plugin.logger.Debug("Video is playing!");
+
+                if (videoPlayer.time != offsetSec)
+                {
+                    // game was restarted
+                    if (currentVideo.offset >= 0)
+                    {
+                        videoPlayer.time = offsetSec;
+                    }
+                    else
+                    {
+                        videoPlayer.time = 0;
+                    }
+                }
+
+                ShowScreen();
+                PlayVideo(true);
+            }
+            else
+            {
+                Plugin.logger.Debug("Video could not be found!");
+                HideScreen();
+            }
+        }
+
+        private IEnumerator StartVideoDelayed(float offset, bool sync)
         {
             if(offset >= 0)
             {
@@ -271,11 +223,20 @@ namespace MusicVideoPlayer
 
             // Wait
             float timeElapsed = 0;
-            while (timeElapsed < -offset)
+
+            if(sync)
             {
-                timeElapsed += Time.deltaTime;
-                yield return null;
+                yield return new WaitUntil(() => syncController.songTime >= -offset);
             }
+            else
+            {
+                while (timeElapsed < -offset)
+                {
+                    timeElapsed += Time.deltaTime;
+                    yield return null;
+                }
+            }
+            
             // Time has elapsed, start video
             // frames are short enough that we shouldn't notice imprecise start time
             videoPlayer.Play();
@@ -304,6 +265,24 @@ namespace MusicVideoPlayer
             screen.SetActive(false);
         }
         
+        public void SetScale(Vector3 scale)
+        {
+            if (Instance.screen == null) return;
+            screen.transform.localScale = scale;
+        }
+
+        public void SetPosition(Vector3 pos)
+        {
+            if (Instance.screen == null) return;
+            screen.transform.position = pos;
+        }
+
+        public void SetRotation(Vector3 rot)
+        {
+            if (Instance.screen == null) return;
+            screen.transform.eulerAngles = rot;
+        }
+
         public void SetPlacement(VideoPlacement placement)
         {
             this.placement = placement;
@@ -311,6 +290,14 @@ namespace MusicVideoPlayer
             screen.transform.position = VideoPlacementSetting.Position(placement);
             screen.transform.eulerAngles = VideoPlacementSetting.Rotation(placement);
             screen.transform.localScale = VideoPlacementSetting.Scale(placement) * Vector3.one;
+        }
+
+        public bool IsVideoPlayable()
+        {
+            if (currentVideo == null || currentVideo.downloadState != DownloadState.Downloaded)
+                return false;
+
+            return true;
         }
 
         public Shader GetShader()

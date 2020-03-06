@@ -34,7 +34,7 @@ namespace MusicVideoPlayer
             return String.Format("{0} by {1} [{2}] \n {3} \n {4} \n {5}", title, author, duration, URL, description, thumbnailURL);
         }
 
-        public VideoData(YTResult ytResult)
+        public VideoData(YTResult ytResult, IPreviewBeatmapLevel level)
         {
             title = ytResult.title;
             author = ytResult.author;
@@ -42,6 +42,7 @@ namespace MusicVideoPlayer
             duration = ytResult.duration;
             URL = ytResult.URL;
             thumbnailURL = ytResult.thumbnailURL;
+            this.level = level;
         }
     }
 }
