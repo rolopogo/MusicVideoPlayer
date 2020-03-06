@@ -5,7 +5,6 @@ using System.IO;
 using System.Collections;
 using System.Collections.Generic;
 using System.Web;
-using MusicVideoPlayer.Util;
 
 namespace MusicVideoPlayer.YT
 {
@@ -15,7 +14,7 @@ namespace MusicVideoPlayer.YT
         public static List<YTResult> searchResults;
         static bool searchInProgress = false;
 
-        static IEnumerator SearchYoutubeCoroutine(string search, IPreviewBeatmapLevel level, Action callback)
+        static IEnumerator SearchYoutubeCoroutine(string search, Action callback)
         {
             searchInProgress = true;
             searchResults = new List<YTResult>();
@@ -37,7 +36,6 @@ namespace MusicVideoPlayer.YT
             doc.Load(stream, System.Text.Encoding.UTF8);
 
             var videoNodes = doc.DocumentNode.SelectNodes("//*[contains(concat(' ', @class, ' '),'yt-lockup-video')]");
-
             if (videoNodes == null)
             {
                 Plugin.logger.Info("[MVP] Search: No results found matching: " + search);
@@ -55,7 +53,7 @@ namespace MusicVideoPlayer.YT
                     {
                         continue;
                     }
-                    data.title = HttpUtility.HtmlDecode(titleNode.InnerText).CleanASCII();
+                    data.title = HttpUtility.HtmlDecode(titleNode.InnerText);
                     
                     // description
                     var descNode = node.SelectSingleNode("//*[contains(concat(' ', @class, ' '),'yt-lockup-description')]");
@@ -63,7 +61,7 @@ namespace MusicVideoPlayer.YT
                     {
                         continue;
                     }
-                    data.description = HttpUtility.HtmlDecode(descNode.InnerText).CleanASCII();
+                    data.description = HttpUtility.HtmlDecode(descNode.InnerText);
                     
                     // duration
                     var durationNode = node.SelectSingleNode("//*[contains(concat(' ', @class, ' '),'video-time')]");
@@ -80,7 +78,7 @@ namespace MusicVideoPlayer.YT
                     {
                         continue;
                     }
-                    data.author = HttpUtility.HtmlDecode(authorNode.InnerText).CleanASCII();
+                    data.author = HttpUtility.HtmlDecode(authorNode.InnerText);
                     
                     // url
                     var urlNode = node.SelectSingleNode("//*[contains(concat(' ', @class, ' '),'yt-uix-tile-link')]");
@@ -111,10 +109,10 @@ namespace MusicVideoPlayer.YT
             searchInProgress = false;
         }
 
-        public static void Search(string query, IPreviewBeatmapLevel level, Action callback)
+        public static void Search(string query, Action callback)
         {
             if (searchInProgress) SharedCoroutineStarter.instance.StopCoroutine("SearchYoutubeCoroutine");
-            SharedCoroutineStarter.instance.StartCoroutine(SearchYoutubeCoroutine(query, level, callback));
+            SharedCoroutineStarter.instance.StartCoroutine(SearchYoutubeCoroutine(query, callback));
         }
     }
 
@@ -130,7 +128,7 @@ namespace MusicVideoPlayer.YT
 
         public new string ToString()
         {
-            return $"{title} by {author} [{duration}]\n{URL}\n{description}\n{thumbnailURL}";
+            return String.Format("{0} by {1} [{2}] \n {3} \n {4} \n {5}", title, author, duration, URL, description, thumbnailURL);
         }
     }
 }

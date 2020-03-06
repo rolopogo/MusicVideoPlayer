@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using SongCore;
 using UnityEngine;
 using System.IO;
 using System.Diagnostics;
 using MusicVideoPlayer.YT;
+using SongCore;
 
 namespace MusicVideoPlayer.Util
 {
@@ -17,7 +17,7 @@ namespace MusicVideoPlayer.Util
         public bool AreVideosLoaded { get; private set; }
         public bool AreVideosLoading { get; private set; }
 
-        public bool autoDownload = false;
+        public bool DictionaryBeingUsed { get; private set; }
 
         private Dictionary<IPreviewBeatmapLevel, VideoData> videos;
 
@@ -30,7 +30,6 @@ namespace MusicVideoPlayer.Util
         {
             if (Instance != null) return;
             new GameObject("VideoFetcher").AddComponent<VideoLoader>();
-            
         }
 
         private void Awake()
@@ -38,13 +37,12 @@ namespace MusicVideoPlayer.Util
             if (Instance != null) return;
             Instance = this;
 
-            autoDownload = Plugin.config.GetBool("Settings", "autoDownload", false, true);
             Loader.SongsLoadedEvent += RetrieveAllVideoData;
 
             DontDestroyOnLoad(gameObject);
         }
         
-        public string GetVideoPath(IPreviewBeatmapLevel level)
+        public string GetVideoPath(IBeatmapLevel level)
         {
             VideoData vid;
             if (videos.TryGetValue(level, out vid)) return GetVideoPath(vid);
@@ -86,7 +84,7 @@ namespace MusicVideoPlayer.Util
             }
         }
 
-        public bool SongHasVideo(IPreviewBeatmapLevel level)
+        public bool SongHasVideo(IBeatmapLevel level)
         {
             return videos.ContainsKey(level);
         }
@@ -113,18 +111,17 @@ namespace MusicVideoPlayer.Util
             //}
         }
 
-        private void RetrieveAllVideoData(Loader songLoader, Dictionary<string, CustomPreviewBeatmapLevel> levels)
+        private void RetrieveAllVideoData(Loader loader, Dictionary<string, CustomPreviewBeatmapLevel> levels)
         {
             videos = new Dictionary<IPreviewBeatmapLevel, VideoData>();
-            List<CustomPreviewBeatmapLevel> LevelList = new List<CustomPreviewBeatmapLevel>(levels.Values);
-            RetrieveCustomLevelVideoData(LevelList);
+            RetrieveCustomLevelVideoData(loader, levels);
             RetrieveOSTVideoData();
         }
 
         private void RetrieveOSTVideoData()
         {
-            BeatmapLevelSO[] levels = Resources.FindObjectsOfTypeAll<BeatmapLevelSO>().Where(x => x.GetType() != typeof(CustomBeatmapLevel)).ToArray();
-
+            BeatmapLevelSO[] levels = Resources.FindObjectsOfTypeAll<BeatmapLevelSO>().Where(x=> x.GetType() != typeof(CustomBeatmapLevel)).ToArray();
+            
             Action job = delegate
             {
                 try
@@ -197,17 +194,17 @@ namespace MusicVideoPlayer.Util
             _loadingTask.Run();
         }
 
-        private void RetrieveCustomLevelVideoData(List<CustomPreviewBeatmapLevel> levels)
+        private void RetrieveCustomLevelVideoData(Loader loader, Dictionary<string, CustomPreviewBeatmapLevel> levels)
         {
             Action job = delegate
             {
                 try
                 {
                     float i = 0;
-                    foreach (CustomPreviewBeatmapLevel level in levels)
+                    foreach (var level in levels)
                     {
                         i++;
-                        var songPath = level.customLevelPath;
+                        var songPath = level.Value.customLevelPath;
                         var results = Directory.GetFiles(songPath, "video.json", SearchOption.AllDirectories);
                         if (results.Length == 0)
                         {
@@ -222,7 +219,8 @@ namespace MusicVideoPlayer.Util
                             HMMainThreadDispatcher.instance.Enqueue(delegate
                             {
                                 if (_loadingCancelled) return;
-                                VideoData video = LoadVideo(result, level);
+                                
+                                VideoData video = LoadVideo(result, level.Value);
                                 if (video != null)
                                 {
                                     AddVideo(video);
@@ -282,14 +280,9 @@ namespace MusicVideoPlayer.Util
 
             vid.level = level;
 
-            if (!File.Exists(GetVideoPath(vid)))
-            {
-                if (autoDownload) {
-                    Plugin.logger.Info("Couldn't find Video: " + vid.videoPath + " queueing for download...");
-                    YouTubeDownloader.Instance.EnqueueVideo(vid);
-                }
-            }
-            else
+            var path = GetVideoPath(vid);
+
+            if (File.Exists(GetVideoPath(vid)))
             {
                 vid.downloadState = DownloadState.Downloaded;
             }
