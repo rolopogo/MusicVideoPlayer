@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace MusicVideoPlayer.Util
 {
-    public enum VideoQuality { Best, High, Medium, Low, Custom };
+    public enum VideoQuality { Best, High, Medium, Low };
 
     public class VideoQualitySetting
     {
@@ -19,12 +19,10 @@ namespace MusicVideoPlayer.Util
                     return "(bestvideo/best)[ext=mp4]";
                 case VideoQuality.High:
                     return "(bestvideo/best)[height<=720][ext=mp4]";
-                case VideoQuality.Medium:
-                    return "(bestvideo/best)[height<=480][ext=mp4]";
                 case VideoQuality.Low:
                     return "(bestvideo/best)[height<480][ext=mp4]";
-                default: // Custom
-                    return Plugin.config.GetString("Settings", "CustomDownloadFormat", "bestvideo[filesize<10M][ext=mp4]", true);
+                default:
+                    return "(bestvideo/best)[height<=480][ext=mp4]";
             }
         }
 
@@ -35,8 +33,7 @@ namespace MusicVideoPlayer.Util
                 (float)VideoQuality.Best,
                 (float)VideoQuality.High,
                 (float)VideoQuality.Medium,
-                (float)VideoQuality.Low,
-                (float)VideoQuality.Custom
+                (float)VideoQuality.Low
             };
         }
 
@@ -52,8 +49,6 @@ namespace MusicVideoPlayer.Util
                     return "Medium";
                 case VideoQuality.Low:
                     return "Low";
-                case VideoQuality.Custom: // Custom
-                    return "Custom";
                 default:
                     return "?";
             }

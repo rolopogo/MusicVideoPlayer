@@ -9,6 +9,7 @@ using UnityEngine;
 using MusicVideoPlayer.Util;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
+using MusicVideoPlayer.UI;
 
 namespace MusicVideoPlayer.YT
 {
@@ -54,7 +55,7 @@ namespace MusicVideoPlayer.YT
                 Instance = new GameObject("YoutubeDownloader").AddComponent<YouTubeDownloader>();
                 DontDestroyOnLoad(Instance);
                 Instance.videoQueue = new Queue<VideoDownload>();
-                Instance.quality = (VideoQuality)Plugin.config.GetInt("Settings", "VideoDownloadQuality", (int)VideoQuality.Medium, true);
+                Instance.quality = MVPSettings.instance.QualityMode;
                 Instance.downloading = false;
                 Instance.updated = false;
                 Instance.UpdateYDL();
@@ -104,7 +105,6 @@ namespace MusicVideoPlayer.YT
                     yield break;
                 }
             }
-            Plugin.logger.Info("Downloading: " + video.title);
 
             StopCoroutine(Countdown(download));
 
@@ -129,7 +129,7 @@ namespace MusicVideoPlayer.YT
             // Download the video via youtube-dl 
             ydl = new Process();
 
-            ydl.StartInfo.FileName = Environment.CurrentDirectory + "/Youtube-dl/youtube-dl.exe";
+            ydl.StartInfo.FileName = Environment.CurrentDirectory + "\\Youtube-dl\\youtube-dl.exe";
             ydl.StartInfo.Arguments =
                 "https://www.youtube.com" + video.URL +
                 " -f \"" + VideoQualitySetting.Format(quality) + "\"" + // Formats
@@ -161,7 +161,6 @@ namespace MusicVideoPlayer.YT
                         downloadProgress?.Invoke(video);
                         download.Update();
                     }
-                    Plugin.logger.Info(e.Data);
                 }
             };
 
@@ -245,7 +244,7 @@ namespace MusicVideoPlayer.YT
         private void UpdateYDL()
         {
             ydl = new Process();
-            ydl.StartInfo.FileName = Environment.CurrentDirectory + "/Youtube-dl/youtube-dl.exe";
+            ydl.StartInfo.FileName = Environment.CurrentDirectory + "\\Youtube-dl\\youtube-dl.exe";
             ydl.StartInfo.Arguments = "-U";
             ydl.StartInfo.RedirectStandardOutput = true;
             ydl.StartInfo.RedirectStandardError = true;
@@ -275,7 +274,6 @@ namespace MusicVideoPlayer.YT
             ydl.Exited += (sender, e) =>
             {
                 updated = true;
-                Plugin.logger.Info("Youtube-DL update complete");
                 ydl.Dispose();
             };
         }

@@ -23,12 +23,10 @@ namespace MusicVideoPlayer.Util
                     return new Vector3(-8, 2, 11);
                 case VideoPlacement.Right:
                     return new Vector3(8, 2, 11);
-                case VideoPlacement.Bottom:
-                    return new Vector3(0, -1.5f, 7.35f);
                 case VideoPlacement.Top:
                     return new Vector3(0, 5, 10);
-                default: // Custom
-                    return Plugin.config.GetString("Placement", "CustomPosition", new Vector3(0, 4, 15).ToString(), true).ToVector3();
+                default:
+                    return new Vector3(0, -1.5f, 7.35f);
             }
         }
 
@@ -44,12 +42,10 @@ namespace MusicVideoPlayer.Util
                     return new Vector3(0, -30, 0);
                 case VideoPlacement.Right:
                     return new Vector3(0, 30, 0);
-                case VideoPlacement.Bottom:
-                    return new Vector3(15, 0, 0);
                 case VideoPlacement.Top:
                     return new Vector3(-15, 0, 0);
-                default: // Custom
-                    return Plugin.config.GetString("Placement", "CustomRotation", new Vector3(-10, 0, 0).ToString(), true).ToVector3();
+                default:
+                    return new Vector3(15, 0, 0);
             }
         }
 
@@ -65,12 +61,10 @@ namespace MusicVideoPlayer.Util
                     return 4;
                 case VideoPlacement.Right:
                     return 4;
-                case VideoPlacement.Bottom:
-                    return 2;
                 case VideoPlacement.Top:
                     return 3;
-                default: // Custom
-                    return Plugin.config.GetFloat("Placement", "CustomScale", 6f, true);
+                default: 
+                    return 2;
             }
         }
 
